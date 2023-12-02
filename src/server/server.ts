@@ -1,28 +1,22 @@
-export const start = () => {
-  const server = Bun.serve({
-    fetch(req, server) {
-      const success = server.upgrade(req)
-      if (success) {
-        // Bun automatically returns a 101 Switching Protocols
-        // if the upgrade succeeds
-        return undefined
-      }
-
-      // handle HTTP request normally
-      return new Response('Hello world!')
+const server = Bun.serve({
+  fetch(req, server) {
+    server.upgrade(req)
+  },
+  websocket: {
+    message(ws, message) {
+      console.log(`Received ${message}`)
+      ws.send(`You said: ${message}`)
     },
-    websocket: {
-      // this is called when a message is received
-      async message(ws, message) {
-        console.log(`Received ${message}`)
-        // send back a message
-        ws.send(`You said: ${message}`)
-      },
-      open() {
-        console.log('connection opened')
-      },
+    open(ws) {
+      console.log('connection opened with')
+      setInterval(() => {
+        ws.send(`Ping ${Math.random()}`)
+      }, 5000)
     },
-  })
+    close() {
+      console.log('connection closed')
+    },
+  },
+})
 
-  console.log(`Listening on ${server.hostname}:${server.port}`)
-}
+console.log(`Listening on ${server.hostname}:${server.port}`)
