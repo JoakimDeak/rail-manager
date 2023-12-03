@@ -1,4 +1,4 @@
-# ws-server
+# rail-manager
 
 To install dependencies:
 
