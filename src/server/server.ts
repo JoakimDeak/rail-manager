@@ -1,4 +1,51 @@
+import { BunRequest as _BunRequest } from 'bun'
+import nodesPostHandler from './endpoints/nodes/post'
+import nodesGetHandler from './endpoints/nodes/get'
+import nodeDeleteHandler from './endpoints/nodes/node/delete'
+import nodePatchHandler from './endpoints/nodes/node/patch'
+import edgesGetHandler from './endpoints/edges/get'
+import edgesPostHandler from './endpoints/edges/post'
+import edgeDeleteHandler from './endpoints/edges/edge/delete'
+import edgePatchHandler from './endpoints/edges/edge/patch'
+import { getNetwork } from './persistance'
+
+const network = getNetwork()
+
 const server = Bun.serve({
+  routes: {
+    '/api/nodes': {
+      GET: (req) => {
+        return nodesGetHandler(req, network)
+      },
+      POST: (req) => {
+        return nodesPostHandler(req, network)
+      },
+    },
+    '/api/nodes/:node': {
+      DELETE: (req) => {
+        return nodeDeleteHandler(req, network)
+      },
+      PATCH: (req) => {
+        return nodePatchHandler(req, network)
+      },
+    },
+    '/api/edges': {
+      GET: (req) => {
+        return edgesGetHandler(req, network)
+      },
+      POST: (req) => {
+        return edgesPostHandler(req, network)
+      },
+    },
+    '/api/edges/:edge': {
+      DELETE: (req) => {
+        return edgeDeleteHandler(req, network)
+      },
+      PATCH: (req) => {
+        return edgePatchHandler(req, network)
+      },
+    },
+  },
   fetch(req, server) {
     server.upgrade(req)
   },

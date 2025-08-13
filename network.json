@@ -1,0 +1,16 @@
+{
+  "nodes": [
+    { "id": "a", "name": "alpha" },
+    { "id": "b", "name": "bravo" },
+    { "id": "c", "name": "charlie" },
+    { "id": "d", "name": "delta" },
+    { "id": "e", "name": "echo" }
+  ],
+  "edges": [
+    { "nodes": ["a", "b"], "weight": 1, "id": "ab" },
+    { "nodes": ["b", "c"], "weight": 1, "id": "bc" },
+    { "nodes": ["c", "d"], "weight": 1, "id": "cd" },
+    { "nodes": ["d", "e"], "weight": 1, "id": "de" },
+    { "nodes": ["a", "e"], "weight": 4, "id": "ae" }
+  ]
+}
