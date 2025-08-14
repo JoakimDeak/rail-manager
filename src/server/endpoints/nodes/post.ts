@@ -13,7 +13,7 @@ const bodySchema = z
         z.object({
           node: z.string(),
           weight: z.number(),
-        })
+        }),
       )
       .max(MAX_EDGES_PER_NODE)
       .optional(),
@@ -23,13 +23,11 @@ const bodySchema = z
       if (!data.edges) {
         return true
       }
-      return (
-        new Set(data.edges?.map(({ node }) => node)).size === data.edges?.length
-      )
+      return new Set(data.edges?.map(({ node }) => node)).size === data.edges?.length
     },
     {
       message: 'Duplicate edges are not allowed',
-    }
+    },
   )
 
 const handler = async (req: BunRequest<'/api/nodes'>, network: Network) => {
@@ -64,7 +62,7 @@ const handler = async (req: BunRequest<'/api/nodes'>, network: Network) => {
 
   if (data.edges) {
     const edgeWithUnknownNode = data.edges.find(
-      ({ node }) => !network.nodes.some(({ id }) => node === id)
+      ({ node }) => !network.nodes.some(({ id }) => node === id),
     )
     if (edgeWithUnknownNode) {
       return new Response(`Unknown node ${edgeWithUnknownNode.node}`, {

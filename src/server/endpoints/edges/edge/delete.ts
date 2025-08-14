@@ -11,7 +11,7 @@ const handler = (req: BunRequest<'/api/edges/:edge'>, network: Network) => {
 
   network.edges.splice(
     network.edges.findIndex((edge) => edge.id === edgeId),
-    1
+    1,
   )
   saveNetwork(network)
 

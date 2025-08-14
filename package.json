@@ -4,10 +4,13 @@
     "start": "bun build:tailwind && bun src/server/server.ts",
     "dev": "bun --watch src/server/server.ts & bun build:tailwind:watch",
     "build:tailwind": "./tailwindcss -i ./src/server/templates/globals.css -o ./dist/globals.css --minify",
-    "build:tailwind:watch": "./tailwindcss -i ./src/server/templates/globals.css -o ./dist/globals.css --watch"
+    "build:tailwind:watch": "./tailwindcss -i ./src/server/templates/globals.css -o ./dist/globals.css --watch",
+    "format:prettier": "prettier --write src/server"
   },
   "devDependencies": {
-    "bun-types": "^1.2.20"
+    "bun-types": "^1.2.20",
+    "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "^0.6.14"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

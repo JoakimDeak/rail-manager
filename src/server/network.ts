@@ -8,23 +8,22 @@ export const networkSchema = z
       z.object({
         id: z.string(),
         name: z.string(),
-      })
+      }),
     ),
     edges: z.array(
       z.object({
         nodes: z.tuple([z.string(), z.string()]),
         weight: z.number().min(1),
         id: z.string(),
-      })
+      }),
     ),
   })
   .superRefine((data, ctx) => {
     if (
       !data.nodes.every(
         (node) =>
-          data.edges.filter(
-            ({ nodes: [a, b] }) => node.id === a || node.id === b
-          ).length <= MAX_EDGES_PER_NODE
+          data.edges.filter(({ nodes: [a, b] }) => node.id === a || node.id === b).length <=
+          MAX_EDGES_PER_NODE,
       )
     ) {
       ctx.addIssue({
@@ -32,9 +31,7 @@ export const networkSchema = z
         message: `Nodes have a maximum of ${MAX_EDGES_PER_NODE} edges`,
       })
     }
-    if (
-      new Set(data.nodes.map(({ name }) => name)).size !== data.nodes.length
-    ) {
+    if (new Set(data.nodes.map(({ name }) => name)).size !== data.nodes.length) {
       ctx.addIssue({
         code: 'custom',
         message: 'Node names must be unique',

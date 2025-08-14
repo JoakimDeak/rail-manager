@@ -8,10 +8,7 @@ const bodySchema = z.object({
   weight: z.number().min(1).or(z.string().regex(/^\d+$/).transform(Number)),
 })
 
-const handler = async (
-  req: BunRequest<'/api/edges/:edge'>,
-  network: Network
-) => {
+const handler = async (req: BunRequest<'/api/edges/:edge'>, network: Network) => {
   const edgeId = req.params.edge
   if (!network.edges.some((edge) => edge.id === edgeId)) {
     return new Response('Not found', { status: 404 })
@@ -46,7 +43,7 @@ const handler = async (
   network.edges.splice(
     network.edges.findIndex((edge) => edge.id === edgeId),
     1,
-    { ...curr, weight: data.weight }
+    { ...curr, weight: data.weight },
   )
   saveNetwork(network)
 
@@ -57,9 +54,7 @@ const handler = async (
   const edgeWithNodeNames = {
     ...curr,
     weight: data.weight,
-    nodes: curr.nodes.map(
-      (node) => network.nodes.find(({ id }) => node === id)!
-    ),
+    nodes: curr.nodes.map((node) => network.nodes.find(({ id }) => node === id)!),
   }
 
   const html = Edge({ edge: edgeWithNodeNames }).toString()

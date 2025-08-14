@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -6,32 +6,26 @@
     <title>RM</title>
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js"></script>
     <link rel="stylesheet" href="/dist/globals.css" />
-    <link
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <link rel="icon" type="image/x-icon" href="/src/assets/minecart.ico" />
   </head>
-  <body class="flex justify-center pt-[15vh] min-h-screen dotted-bg font-mono">
-    <div class="flex gap-8 bg-white p-8 rounded-[8px] h-fit">
+  <body class="dotted-bg flex min-h-screen justify-center pt-[15vh] font-mono">
+    <div class="flex h-fit gap-8 rounded-[8px] bg-white p-8">
       <div
-        class="flex flex-col gap-2 p-4 outline-emerald-900 outline shadow-emerald-900 shadow-[4px_4px_0px] h-fit"
+        class="flex h-fit flex-col gap-2 p-4 shadow-[4px_4px_0px] shadow-emerald-900 outline outline-emerald-900"
         hx-get="/api/nodes"
         hx-trigger="load"
         hx-swap="outerHTML"
         hx-target="#node-list-placeholder"
       >
-        <div
-          class="peer p-2 border-b border-black flex justify-between items-end"
-        >
+        <div class="peer flex items-end justify-between border-b border-black p-2">
           <span>Nodes</span>
           <label class="group">
             <input id="node-form-toggle" type="checkbox" class="peer sr-only" />
             <div
-              class="hover:shadow-[2px_2px_0px] flex shadow-black outline-black hover:outline w-fit active:shadow-none active:translate-[1px]"
+              class="flex w-fit shadow-black outline-black hover:shadow-[2px_2px_0px] hover:outline active:translate-[1px] active:shadow-none"
             >
-              <span
-                class="material-icons group-has-checked:rotate-45 transition-transform"
+              <span class="material-icons transition-transform group-has-checked:rotate-45"
                 >add</span
               >
             </div>
@@ -43,19 +37,17 @@
           hx-on::after-request="if(event.detail.successful) this.reset()"
           hx-swap="beforeend"
           hx-target="previous ul"
-          class="hidden peer-has-checked:flex items-center gap-2"
+          class="hidden items-center gap-2 peer-has-checked:flex"
         >
           <span>-</span>
-          <div
-            class="p-2 flex grow outline-black outline shadow-black shadow-[2px_2px_0px]"
-          >
+          <div class="flex grow p-2 shadow-[2px_2px_0px] shadow-black outline outline-black">
             <input
               name="name"
-              class="placeholder:text-neutral-400 w-full outline-none"
+              class="w-full outline-none placeholder:text-neutral-400"
               placeholder="name"
             />
             <button
-              class="material-icons hover:shadow-[2px_2px_0px] shadow-black outline-black hover:outline active:shadow-none active:translate-[1px]"
+              class="material-icons shadow-black outline-black hover:shadow-[2px_2px_0px] hover:outline active:translate-[1px] active:shadow-none"
             >
               check
             </button>
@@ -63,23 +55,20 @@
         </form>
       </div>
       <div
-        class="flex flex-col gap-2 p-4 outline-emerald-900 outline shadow-emerald-900 shadow-[4px_4px_0px] h-fit"
+        class="flex h-fit flex-col gap-2 p-4 shadow-[4px_4px_0px] shadow-emerald-900 outline outline-emerald-900"
         hx-get="/api/edges"
         hx-trigger="load"
         hx-target="#edge-list-placeholder"
         hx-swap="outerHTML"
       >
-        <div
-          class="peer p-2 border-b border-black flex justify-between items-end"
-        >
+        <div class="peer flex items-end justify-between border-b border-black p-2">
           <span>Edges</span>
           <label class="group">
             <input id="edge-form-toggle" type="checkbox" class="peer sr-only" />
             <div
-              class="hover:shadow-[2px_2px_0px] flex shadow-black outline-black hover:outline w-fit active:shadow-none active:translate-[1px]"
+              class="flex w-fit shadow-black outline-black hover:shadow-[2px_2px_0px] hover:outline active:translate-[1px] active:shadow-none"
             >
-              <span
-                class="material-icons group-has-checked:rotate-45 transition-transform"
+              <span class="material-icons transition-transform group-has-checked:rotate-45"
                 >add</span
               >
             </div>
@@ -91,16 +80,16 @@
           hx-on::after-request="if(event.detail.successful) this.reset()"
           hx-swap="beforeend"
           hx-target="previous ul"
-          class="hidden peer-has-checked:flex items-center gap-2"
+          class="hidden items-center gap-2 peer-has-checked:flex"
         >
           <span>-</span>
           <div
-            class="p-2 flex grow gap-2 justify-between outline-black outline shadow-black shadow-[2px_2px_0px]"
+            class="flex grow justify-between gap-2 p-2 shadow-[2px_2px_0px] shadow-black outline outline-black"
           >
             <div class="flex gap-2">
               [
               <select
-                class="outline-black outline shadow-black shadow-[2px_2px_0px] open:shadow-none open:translate-[1px] px-1"
+                class="px-1 shadow-[2px_2px_0px] shadow-black outline outline-black open:translate-[1px] open:shadow-none"
                 hx-get="/api/nodes/options"
                 hx-trigger="load"
                 hx-swap="innerHTML"
@@ -110,7 +99,7 @@
                 id="from-node-select"
               ></select>
               <select
-                class="outline-black outline shadow-black shadow-[2px_2px_0px] open:shadow-none open:translate-[1px] px-1"
+                class="px-1 shadow-[2px_2px_0px] shadow-black outline outline-black open:translate-[1px] open:shadow-none"
                 hx-get="/api/nodes/options"
                 hx-trigger="load"
                 hx-swap="innerHTML"
@@ -124,12 +113,12 @@
                 name="weight"
                 type="number"
                 min="1"
-                class="placeholder:text-neutral-400 w-[8ch] outline-none"
+                class="w-[8ch] outline-none placeholder:text-neutral-400"
                 placeholder="weight"
               />
             </div>
             <button
-              class="material-icons hover:shadow-[2px_2px_0px] shadow-black outline-black hover:outline active:shadow-none active:translate-[1px]"
+              class="material-icons shadow-black outline-black hover:shadow-[2px_2px_0px] hover:outline active:translate-[1px] active:shadow-none"
             >
               check
             </button>
@@ -138,10 +127,7 @@
       </div>
     </div>
 
-    <div
-      id="toast-container"
-      class="fixed bottom-0 mx-auto mb-2 flex flex-col gap-2"
-    ></div>
+    <div id="toast-container" class="fixed bottom-0 mx-auto mb-2 flex flex-col gap-2"></div>
     <script>
       document.body.addEventListener('htmx:responseError', function (evt) {
         const message = evt.detail.xhr.responseText
@@ -164,8 +150,7 @@
     <script>
       document.body.addEventListener('htmx:afterSwap', (e) => {
         const nodeWasAdded =
-          e.detail.requestConfig.verb === 'post' &&
-          e.detail.requestConfig.path === '/api/nodes'
+          e.detail.requestConfig.verb === 'post' && e.detail.requestConfig.path === '/api/nodes'
         if (!nodeWasAdded) {
           return
         }
@@ -178,8 +163,7 @@
     <script>
       document.body.addEventListener('htmx:afterSwap', (e) => {
         const edgeWasAdded =
-          e.detail.requestConfig.verb === 'post' &&
-          e.detail.requestConfig.path === '/api/edges'
+          e.detail.requestConfig.verb === 'post' && e.detail.requestConfig.path === '/api/edges'
         if (!edgeWasAdded) {
           return
         }

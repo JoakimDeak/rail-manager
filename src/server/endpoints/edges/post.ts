@@ -46,7 +46,7 @@ const handler = async (req: BunRequest<'/api/edges'>, network: Network) => {
   }
 
   const unknownNode = [data.from, data.to].find((node) =>
-    network.nodes.every(({ id }) => node !== id)
+    network.nodes.every(({ id }) => node !== id),
   )
   if (unknownNode) {
     return new Response(`Unknown node ${unknownNode}`, { status: 400 })
@@ -54,21 +54,19 @@ const handler = async (req: BunRequest<'/api/edges'>, network: Network) => {
 
   const fullNode = [data.from, data.to].find(
     (node) =>
-      network.edges.filter((edge) => edge.nodes.includes(node)).length ===
-      MAX_EDGES_PER_NODE
+      network.edges.filter((edge) => edge.nodes.includes(node)).length === MAX_EDGES_PER_NODE,
   )
   if (fullNode) {
     return new Response(`Node ${fullNode} is already at capacity`)
   }
 
   const isDuplicateEdge = network.edges.some(
-    (edge) => edge.nodes.includes(data.from) && edge.nodes.includes(data.to)
+    (edge) => edge.nodes.includes(data.from) && edge.nodes.includes(data.to),
   )
   if (isDuplicateEdge) {
-    return new Response(
-      `An edge between ${data.from} and ${data.to} already exists`,
-      { status: 400 }
-    )
+    return new Response(`An edge between ${data.from} and ${data.to} already exists`, {
+      status: 400,
+    })
   }
 
   const newEdge = {
@@ -85,9 +83,7 @@ const handler = async (req: BunRequest<'/api/edges'>, network: Network) => {
 
   const edgeWithNodeNames = {
     ...newEdge,
-    nodes: newEdge.nodes.map(
-      (node) => network.nodes.find(({ id }) => node === id)!
-    ),
+    nodes: newEdge.nodes.map((node) => network.nodes.find(({ id }) => node === id)!),
   }
 
   const html = Edge({ edge: edgeWithNodeNames }).toString()

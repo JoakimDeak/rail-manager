@@ -10,6 +10,6 @@ export const saveNetwork = async (network: Network) => {
 
 export const getNetwork = () => {
   return networkSchema.parse(
-    JSON.parse(readFileSync('src/server/persistance/network.json', 'utf8'))
+    JSON.parse(readFileSync('src/server/persistance/network.json', 'utf8')),
   )
 }

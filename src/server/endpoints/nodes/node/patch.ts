@@ -9,10 +9,7 @@ const bodySchema = z.object({
   name: z.string(),
 })
 
-const handler = async (
-  req: BunRequest<'/api/nodes/:node'>,
-  network: Network
-) => {
+const handler = async (req: BunRequest<'/api/nodes/:node'>, network: Network) => {
   const nodeId = req.params.node
   if (!network.nodes.some((node) => node.id === nodeId)) {
     return new Response('Not found', { status: 404 })
@@ -51,7 +48,7 @@ const handler = async (
   network.nodes.splice(
     network.nodes.findIndex((node) => node.id === nodeId),
     1,
-    { ...curr, name: data.name }
+    { ...curr, name: data.name },
   )
   saveNetwork(network)
 

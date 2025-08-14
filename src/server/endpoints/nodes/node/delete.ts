@@ -12,7 +12,7 @@ const handler = (req: BunRequest<'/api/nodes/:node'>, network: Network) => {
 
   network.nodes.splice(
     network.nodes.findIndex(({ id }) => nodeId === id),
-    1
+    1,
   )
   network.edges = network.edges.filter((edge) => !edge.nodes.includes(nodeId))
 
