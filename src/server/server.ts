@@ -1,6 +1,7 @@
 import { BunRequest as _BunRequest } from 'bun'
 import nodesPostHandler from './endpoints/nodes/post'
 import nodesGetHandler from './endpoints/nodes/get'
+import nodesOptionsGetHandler from './endpoints/nodes/options/get'
 import nodeDeleteHandler from './endpoints/nodes/node/delete'
 import nodePatchHandler from './endpoints/nodes/node/patch'
 import edgesGetHandler from './endpoints/edges/get'
@@ -8,6 +9,7 @@ import edgesPostHandler from './endpoints/edges/post'
 import edgeDeleteHandler from './endpoints/edges/edge/delete'
 import edgePatchHandler from './endpoints/edges/edge/patch'
 import { getNetwork } from './persistance'
+import index from './templates/index.html'
 
 const network = getNetwork()
 
@@ -19,6 +21,11 @@ const server = Bun.serve({
       },
       POST: (req) => {
         return nodesPostHandler(req, network)
+      },
+    },
+    '/api/nodes/options': {
+      GET: (req) => {
+        return nodesOptionsGetHandler(req, network)
       },
     },
     '/api/nodes/:node': {
@@ -45,8 +52,12 @@ const server = Bun.serve({
         return edgePatchHandler(req, network)
       },
     },
+    '/dist/globals.css': new Response(Bun.file('dist/globals.css')),
+    '/': index,
   },
+
   fetch(req, server) {
+    console.log('running this')
     server.upgrade(req)
   },
   websocket: {
@@ -65,5 +76,3 @@ const server = Bun.serve({
     },
   },
 })
-
-console.log(`Listening on ${server.hostname}:${server.port}`)

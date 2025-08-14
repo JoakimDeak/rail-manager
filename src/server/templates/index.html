@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RM</title>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js"></script>
+    <link rel="stylesheet" href="/dist/globals.css" />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/x-icon" href="/src/assets/minecart.ico" />
+  </head>
+  <body class="flex justify-center pt-[15vh] min-h-screen dotted-bg font-mono">
+    <div class="flex gap-8 bg-white p-8 rounded-[8px] h-fit">
+      <div
+        class="flex flex-col gap-2 p-4 outline-emerald-900 outline shadow-emerald-900 shadow-[4px_4px_0px] h-fit"
+        hx-get="/api/nodes"
+        hx-trigger="load"
+        hx-swap="outerHTML"
+        hx-target="#node-list-placeholder"
+      >
+        <div
+          class="peer p-2 border-b border-black flex justify-between items-end"
+        >
+          <span>Nodes</span>
+          <label class="group">
+            <input id="node-form-toggle" type="checkbox" class="peer sr-only" />
+            <div
+              class="hover:shadow-[2px_2px_0px] flex shadow-black outline-black hover:outline w-fit active:shadow-none active:translate-[1px]"
+            >
+              <span
+                class="material-icons group-has-checked:rotate-45 transition-transform"
+                >add</span
+              >
+            </div>
+          </label>
+        </div>
+        <div class="w-[300px]" id="node-list-placeholder"></div>
+        <form
+          hx-post="/api/nodes"
+          hx-on::after-request="if(event.detail.successful) this.reset()"
+          hx-swap="beforeend"
+          hx-target="previous ul"
+          class="hidden peer-has-checked:flex items-center gap-2"
+        >
+          <span>-</span>
+          <div
+            class="p-2 flex grow outline-black outline shadow-black shadow-[2px_2px_0px]"
+          >
+            <input
+              name="name"
+              class="placeholder:text-neutral-400 w-full outline-none"
+              placeholder="name"
+            />
+            <button
+              class="material-icons hover:shadow-[2px_2px_0px] shadow-black outline-black hover:outline active:shadow-none active:translate-[1px]"
+            >
+              check
+            </button>
+          </div>
+        </form>
+      </div>
+      <div
+        class="flex flex-col gap-2 p-4 outline-emerald-900 outline shadow-emerald-900 shadow-[4px_4px_0px] h-fit"
+        hx-get="/api/edges"
+        hx-trigger="load"
+        hx-target="#edge-list-placeholder"
+        hx-swap="outerHTML"
+      >
+        <div
+          class="peer p-2 border-b border-black flex justify-between items-end"
+        >
+          <span>Edges</span>
+          <label class="group">
+            <input id="edge-form-toggle" type="checkbox" class="peer sr-only" />
+            <div
+              class="hover:shadow-[2px_2px_0px] flex shadow-black outline-black hover:outline w-fit active:shadow-none active:translate-[1px]"
+            >
+              <span
+                class="material-icons group-has-checked:rotate-45 transition-transform"
+                >add</span
+              >
+            </div>
+          </label>
+        </div>
+        <div class="w-[395px]" id="edge-list-placeholder"></div>
+        <form
+          hx-post="/api/edges"
+          hx-on::after-request="if(event.detail.successful) this.reset()"
+          hx-swap="beforeend"
+          hx-target="previous ul"
+          class="hidden peer-has-checked:flex items-center gap-2"
+        >
+          <span>-</span>
+          <div
+            class="p-2 flex grow gap-2 justify-between outline-black outline shadow-black shadow-[2px_2px_0px]"
+          >
+            <div class="flex gap-2">
+              [
+              <select
+                class="outline-black outline shadow-black shadow-[2px_2px_0px] open:shadow-none open:translate-[1px] px-1"
+                hx-get="/api/nodes/options"
+                hx-trigger="load"
+                hx-swap="innerHTML"
+                hx-target="this"
+                name="from"
+                hx-params="none"
+                id="from-node-select"
+              ></select>
+              <select
+                class="outline-black outline shadow-black shadow-[2px_2px_0px] open:shadow-none open:translate-[1px] px-1"
+                hx-get="/api/nodes/options"
+                hx-trigger="load"
+                hx-swap="innerHTML"
+                hx-target="this"
+                name="to"
+                hx-params="none"
+                id="to-node-select"
+              ></select>
+              ]
+              <input
+                name="weight"
+                type="number"
+                min="1"
+                class="placeholder:text-neutral-400 w-[8ch] outline-none"
+                placeholder="weight"
+              />
+            </div>
+            <button
+              class="material-icons hover:shadow-[2px_2px_0px] shadow-black outline-black hover:outline active:shadow-none active:translate-[1px]"
+            >
+              check
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div
+      id="toast-container"
+      class="fixed bottom-0 mx-auto mb-2 flex flex-col gap-2"
+    ></div>
+    <script>
+      document.body.addEventListener('htmx:responseError', function (evt) {
+        const message = evt.detail.xhr.responseText
+
+        if (message) {
+          showToast(message)
+        }
+      })
+
+      function showToast(msg) {
+        const toast = document.createElement('div')
+        toast.textContent = msg
+        toast.className =
+          'p-2 bg-white outline-red-500 outline shadow-[4px_4px_0px] shadow-red-500 px-6'
+        document.getElementById('toast-container').prepend(toast)
+
+        setTimeout(() => toast.remove(), 3000)
+      }
+    </script>
+    <script>
+      document.body.addEventListener('htmx:afterSwap', (e) => {
+        const nodeWasAdded =
+          e.detail.requestConfig.verb === 'post' &&
+          e.detail.requestConfig.path === '/api/nodes'
+        if (!nodeWasAdded) {
+          return
+        }
+        const checkbox = document.body.querySelector('#node-form-toggle')
+        if (checkbox) {
+          checkbox.checked = false
+        }
+      })
+    </script>
+    <script>
+      document.body.addEventListener('htmx:afterSwap', (e) => {
+        const edgeWasAdded =
+          e.detail.requestConfig.verb === 'post' &&
+          e.detail.requestConfig.path === '/api/edges'
+        if (!edgeWasAdded) {
+          return
+        }
+        const checkbox = document.body.querySelector('#edge-form-toggle')
+        if (checkbox) {
+          checkbox.checked = false
+        }
+      })
+    </script>
+  </body>
+</html>

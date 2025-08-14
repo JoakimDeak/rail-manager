@@ -1,27 +1,13 @@
 import { BunRequest } from 'bun'
 import { Network } from 'server/network'
 import { saveNetwork } from 'server/persistance'
+import { EdgeList } from 'server/templates/EdgeList'
 
 const handler = (req: BunRequest<'/api/nodes/:node'>, network: Network) => {
   const nodeId = req.params.node
 
   if (!network.nodes.some((node) => node.id === nodeId)) {
     return new Response('Not found', { status: 404 })
-  }
-
-  const isolatedNode = network.edges
-    .filter((edge) => edge.nodes.includes(nodeId))
-    .flatMap((edge) => edge.nodes.filter((node) => node !== nodeId))
-    .find(
-      (node) =>
-        network.edges.filter(
-          (edge) => edge.nodes.includes(node) && !edge.nodes.includes(nodeId)
-        ).length === 0
-    )
-  if (isolatedNode) {
-    return new Response(
-      `Deleting node ${nodeId} would isolate node ${isolatedNode}`
-    )
   }
 
   network.nodes.splice(
@@ -32,7 +18,16 @@ const handler = (req: BunRequest<'/api/nodes/:node'>, network: Network) => {
 
   saveNetwork(network)
 
-  return new Response('Deleted', { status: 200 })
+  if (req.headers.get('Accept') === 'application/json') {
+    return new Response(undefined, { status: 200 })
+  }
+
+  const html = EdgeList({ network, oobSwap: 'outerHTML:#edge-list' }).toString()
+  return new Response(html, {
+    headers: {
+      'Content-Type': 'text/html',
+    },
+  })
 }
 
 export default handler

@@ -1,24 +1,7 @@
-const graph = {
-  nodes: [
-    { id: 'a', name: 'alpha' },
-    { id: 'b', name: 'bravo' },
-    { id: 'c', name: 'charlie' },
-    { id: 'd', name: 'delta' },
-    { id: 'e', name: 'echo' },
-    { id: 'f', name: 'foxtrot' },
-  ],
-  edges: [
-    { nodes: ['a', 'b'], weight: 1 },
-    { nodes: ['b', 'c'], weight: 1 },
-    { nodes: ['c', 'd'], weight: 1 },
-    { nodes: ['c', 'f'], weight: 1 },
-    { nodes: ['d', 'e'], weight: 1 },
-    { nodes: ['e', 'f'], weight: 1 },
-  ],
-}
+import { Network } from './network'
 
-const getParentGraph = (start: string) => {
-  const dists = graph.nodes.reduce((acc, curr) => {
+const getParentGraph = (start: string, network: Network) => {
+  const dists = network.nodes.reduce((acc, curr) => {
     if (curr.id === start) {
       acc[curr.id] = 0
     } else {
@@ -27,7 +10,7 @@ const getParentGraph = (start: string) => {
     return acc
   }, {} as Record<string, number>)
 
-  const queue = graph.nodes.slice().map(({ id }) => id)
+  const queue = network.nodes.slice().map(({ id }) => id)
   const visited = new Set<string>()
   const parents: Partial<Record<string, string>> = {}
 
@@ -46,7 +29,7 @@ const getParentGraph = (start: string) => {
 
     visited.add(curr)
 
-    const neighbours = graph.edges
+    const neighbours = network.edges
       .filter(({ nodes: [a, b] }) => curr === a || curr === b)
       .map(({ nodes: [a, b], weight }) => ({
         node: curr === a ? b : a,
@@ -75,24 +58,28 @@ const pathfind = (
     path.push(prev)
     prev = parentGraph[prev]
   }
+
+  if (path.length === 1) {
+    return undefined
+  }
+
   return path.toReversed()
 }
 
-const getAllPaths = () => {
+export const getAllPaths = (network: Network) => {
   const paths: Partial<Record<`${string},${string}`, string[]>> = {}
-  const parentGraphs = graph.nodes.reduce((graphs, node) => {
-    graphs[node.id] = getParentGraph(node.id)
+  const parentGraphs = network.nodes.reduce((graphs, node) => {
+    graphs[node.id] = getParentGraph(node.id, network)
     return graphs
   }, {} as Record<string, Partial<Record<string, string>>>)
-  for (let i = 0; i < graph.nodes.length - 1; i++) {
-    for (let j = i + 1; j < graph.nodes.length; j++) {
-      paths[`${graph.nodes[i].id},${graph.nodes[j].id}`] = pathfind(
-        parentGraphs[graph.nodes[i].id],
-        graph.nodes[j].id
+
+  for (let i = 0; i < network.nodes.length - 1; i++) {
+    for (let j = i + 1; j < network.nodes.length; j++) {
+      paths[`${network.nodes[i].id},${network.nodes[j].id}`] = pathfind(
+        parentGraphs[network.nodes[i].id],
+        network.nodes[j].id
       )
     }
   }
   return paths
 }
-
-console.log(getAllPaths())

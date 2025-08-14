@@ -46,6 +46,7 @@ export const networkSchema = z
         message: 'A node cannot connect to itself',
       })
     }
+    // add edge uniqueness
   })
 
 export type Network = z.infer<typeof networkSchema>
