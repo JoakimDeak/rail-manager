@@ -13,7 +13,7 @@ import index from './templates/index.html'
 
 const network = getNetwork()
 
-const server = Bun.serve({
+Bun.serve({
   routes: {
     '/api/nodes': {
       GET: (req) => {
@@ -55,11 +55,10 @@ const server = Bun.serve({
     '/dist/globals.css': new Response(Bun.file('dist/globals.css')),
     '/': index,
   },
-
   fetch(req, server) {
-    console.log('running this')
     server.upgrade(req)
   },
+  // figure out how we're using and managing this from lua
   websocket: {
     message(ws, message) {
       console.log(`Received ${message}`)

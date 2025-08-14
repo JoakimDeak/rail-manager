@@ -1,13 +1,13 @@
 @import 'tailwindcss';
 
-:root {
-  --dot-space: 15px;
-  --dot-size: 1px;
-  --dot-color: theme(--color-emerald-500);
-  --bg: #fff;
+@utility no-scrollbar {
+  @apply [scrollbar-width:none] [&::-webkit-scrollbar]:hidden;
 }
 
 .dotted-bg {
+  --dot-space: 15px;
+  --dot-size: 1px;
+  --dot-color: theme(--color-emerald-500);
   background-color: theme(--color-white);
   background-image: radial-gradient(
     circle,

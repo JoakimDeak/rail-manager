@@ -7,7 +7,11 @@ export const EdgeList = ({ network, oobSwap }: { network: Network; oobSwap?: str
     return { ...edge, nodes: [a, b] }
   })
   return (
-    <ul class="flex min-h-10 flex-col gap-2" hx-swap-oob={oobSwap} id="edge-list">
+    <ul
+      class="no-scrollbar flex min-h-10 flex-col gap-2 overflow-y-scroll pt-px pr-0.5 pb-0.5"
+      hx-swap-oob={oobSwap}
+      id="edge-list"
+    >
       {edgesWithNodeNames.map((edge) => (
         <Edge edge={edge} />
       ))}
