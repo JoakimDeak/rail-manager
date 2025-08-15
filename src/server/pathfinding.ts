@@ -1,4 +1,11 @@
+import z from 'zod'
 import { Network } from './network'
+
+export const pathMapSchema = z.record(
+  z.templateLiteral([z.string(), ',', z.string()]),
+  z.array(z.string()).or(z.undefined()),
+)
+export type PathMap = z.infer<typeof pathMapSchema>
 
 const getParentGraph = (start: string, network: Network) => {
   const dists = network.nodes.reduce(
@@ -87,5 +94,5 @@ export const getAllPaths = (network: Network) => {
       )
     }
   }
-  return paths
+  return paths satisfies PathMap
 }

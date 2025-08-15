@@ -1,4 +1,4 @@
-import { BunRequest as _BunRequest } from 'bun'
+import { BunRequest as _BunRequest, ServerWebSocket } from 'bun'
 import nodesPostHandler from './endpoints/nodes/post'
 import nodesGetHandler from './endpoints/nodes/get'
 import nodesOptionsGetHandler from './endpoints/nodes/options/get'
@@ -8,10 +8,13 @@ import edgesGetHandler from './endpoints/edges/get'
 import edgesPostHandler from './endpoints/edges/post'
 import edgeDeleteHandler from './endpoints/edges/edge/delete'
 import edgePatchHandler from './endpoints/edges/edge/patch'
-import { getNetwork } from './persistance'
+import journeysPostHandler from './endpoints/journeys/post'
+import { getNetwork, getPathMap } from './persistance'
 import index from './templates/index.html'
+import handlers, { type NodeWebSocket } from './web-sockets'
 
 const network = getNetwork()
+const pathMap = getPathMap()
 
 Bun.serve({
   routes: {
@@ -52,26 +55,34 @@ Bun.serve({
         return edgePatchHandler(req, network)
       },
     },
+    '/api/journeys': {
+      POST: (req) => {
+        return journeysPostHandler(req, pathMap)
+      },
+    },
     '/dist/globals.css': new Response(Bun.file('dist/globals.css')),
     '/': index,
   },
   fetch(req, server) {
-    server.upgrade(req)
+    const upgradeHeader = req.headers.get('upgrade')
+    if (!upgradeHeader || upgradeHeader !== 'websocket') {
+      return new Response('Invalid endpoint', { status: 404 })
+    }
+
+    const nodeId = new URL(req.url).searchParams.get('nodeId')
+    if (!nodeId) {
+      return new Response('Missing node id', { status: 400 })
+    }
+
+    const wasUpgradeSuccessful = server.upgrade(req, {
+      data: { nodeId },
+    })
+    if (!wasUpgradeSuccessful) {
+      return new Response('Upgrade failed', { status: 500 })
+    } else {
+    }
   },
-  // figure out how we're using and managing this from lua
   websocket: {
-    message(ws, message) {
-      console.log(`Received ${message}`)
-      ws.send(`You said: ${message}`)
-    },
-    open(ws) {
-      console.log('connection opened with')
-      setInterval(() => {
-        ws.send(`Ping ${Math.random()}`)
-      }, 5000)
-    },
-    close() {
-      console.log('connection closed')
-    },
+    ...handlers,
   },
 })

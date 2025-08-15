@@ -1,6 +1,6 @@
 import { Network, networkSchema } from '../network'
 import { writeFileSync, readFileSync } from 'fs'
-import { getAllPaths } from '../pathfinding'
+import { getAllPaths, pathMapSchema } from '../pathfinding'
 
 export const saveNetwork = async (network: Network) => {
   const paths = getAllPaths(network)
@@ -12,4 +12,8 @@ export const getNetwork = () => {
   return networkSchema.parse(
     JSON.parse(readFileSync('src/server/persistance/network.json', 'utf8')),
   )
+}
+
+export const getPathMap = () => {
+  return pathMapSchema.parse(JSON.parse(readFileSync('src/server/persistance/paths.json', 'utf8')))
 }
