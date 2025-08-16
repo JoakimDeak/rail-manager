@@ -10,7 +10,7 @@ const handler = (req: BunRequest<'/api/nodes/:node/edges'>) => {
 
   const edges = network.edges.filter((edge) => edge.nodes.includes(nodeId))
 
-  return Response.json(edges)
+  return Response.json({ edges })
 }
 
 export default handler

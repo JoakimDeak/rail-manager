@@ -2,6 +2,10 @@ import z from 'zod'
 
 export const MAX_EDGES_PER_NODE = 3
 
+/**
+ * TODO: Stop using node.id. Honestly remove it cause it doesn't need to exist
+ * names are already unique and ids arent visible anywhere
+ */
 export const networkSchema = z
   .object({
     nodes: z.array(

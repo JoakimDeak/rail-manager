@@ -4,6 +4,7 @@ import nodesGetHandler from './endpoints/nodes/get'
 import nodesOptionsGetHandler from './endpoints/nodes/options/get'
 import nodeDeleteHandler from './endpoints/nodes/node/delete'
 import nodePatchHandler from './endpoints/nodes/node/patch'
+import nodeGetHandler from './endpoints/nodes/node/get'
 import nodeEdgesGetHandler from './endpoints/nodes/node/edges/get'
 import edgesGetHandler from './endpoints/edges/get'
 import edgesPostHandler from './endpoints/edges/post'
@@ -39,6 +40,9 @@ const server = Bun.serve({
       PATCH: (req) => {
         return nodePatchHandler(req)
       },
+      GET: (req) => {
+        return nodeGetHandler(req)
+      },
     },
     '/api/nodes/:node/edges': {
       GET: (req) => {
@@ -66,6 +70,7 @@ const server = Bun.serve({
         return journeysPostHandler(req)
       },
     },
+    '/api/status': new Response('OK'),
     '/': index,
   },
   fetch(req, server) {
@@ -84,7 +89,6 @@ const server = Bun.serve({
     })
     if (!wasUpgradeSuccessful) {
       return new Response('Upgrade failed', { status: 500 })
-    } else {
     }
   },
   websocket: {
