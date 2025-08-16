@@ -17,7 +17,7 @@ import handlers from './web-sockets'
 export const network = getNetwork()
 export const pathMap = getPathMap()
 
-Bun.serve({
+const server = Bun.serve({
   routes: {
     '/api/nodes': {
       GET: (req) => {
@@ -91,3 +91,5 @@ Bun.serve({
     ...handlers,
   },
 })
+
+console.log(`Running on ${server.url}`)
