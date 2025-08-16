@@ -1,9 +1,10 @@
-import { BunRequest as _BunRequest, ServerWebSocket } from 'bun'
+import { BunRequest as _BunRequest } from 'bun'
 import nodesPostHandler from './endpoints/nodes/post'
 import nodesGetHandler from './endpoints/nodes/get'
 import nodesOptionsGetHandler from './endpoints/nodes/options/get'
 import nodeDeleteHandler from './endpoints/nodes/node/delete'
 import nodePatchHandler from './endpoints/nodes/node/patch'
+import nodeEdgesGetHandler from './endpoints/nodes/node/edges/get'
 import edgesGetHandler from './endpoints/edges/get'
 import edgesPostHandler from './endpoints/edges/post'
 import edgeDeleteHandler from './endpoints/edges/edge/delete'
@@ -11,53 +12,58 @@ import edgePatchHandler from './endpoints/edges/edge/patch'
 import journeysPostHandler from './endpoints/journeys/post'
 import { getNetwork, getPathMap } from './persistance'
 import index from './templates/index.html'
-import handlers, { type NodeWebSocket } from './web-sockets'
+import handlers from './web-sockets'
 
-const network = getNetwork()
-const pathMap = getPathMap()
+export const network = getNetwork()
+export const pathMap = getPathMap()
 
 Bun.serve({
   routes: {
     '/api/nodes': {
       GET: (req) => {
-        return nodesGetHandler(req, network)
+        return nodesGetHandler(req)
       },
       POST: (req) => {
-        return nodesPostHandler(req, network)
+        return nodesPostHandler(req)
       },
     },
     '/api/nodes/options': {
       GET: (req) => {
-        return nodesOptionsGetHandler(req, network)
+        return nodesOptionsGetHandler(req)
       },
     },
     '/api/nodes/:node': {
       DELETE: (req) => {
-        return nodeDeleteHandler(req, network)
+        return nodeDeleteHandler(req)
       },
       PATCH: (req) => {
-        return nodePatchHandler(req, network)
+        return nodePatchHandler(req)
+      },
+    },
+    '/api/nodes/:node/edges': {
+      GET: (req) => {
+        return nodeEdgesGetHandler(req)
       },
     },
     '/api/edges': {
       GET: (req) => {
-        return edgesGetHandler(req, network)
+        return edgesGetHandler(req)
       },
       POST: (req) => {
-        return edgesPostHandler(req, network)
+        return edgesPostHandler(req)
       },
     },
     '/api/edges/:edge': {
       DELETE: (req) => {
-        return edgeDeleteHandler(req, network)
+        return edgeDeleteHandler(req)
       },
       PATCH: (req) => {
-        return edgePatchHandler(req, network)
+        return edgePatchHandler(req)
       },
     },
     '/api/journeys': {
       POST: (req) => {
-        return journeysPostHandler(req, pathMap)
+        return journeysPostHandler(req)
       },
     },
     '/dist/globals.css': new Response(Bun.file('dist/globals.css')),

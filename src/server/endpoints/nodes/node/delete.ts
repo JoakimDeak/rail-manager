@@ -1,9 +1,9 @@
 import { BunRequest } from 'bun'
-import { Network } from 'server/network'
 import { saveNetwork } from 'server/persistance'
 import { EdgeList } from 'server/templates/EdgeList'
+import { network } from 'server/server'
 
-const handler = (req: BunRequest<'/api/nodes/:node'>, network: Network) => {
+const handler = (req: BunRequest<'/api/nodes/:node'>) => {
   const nodeId = req.params.node
 
   if (!network.nodes.some((node) => node.id === nodeId)) {
@@ -16,13 +16,13 @@ const handler = (req: BunRequest<'/api/nodes/:node'>, network: Network) => {
   )
   network.edges = network.edges.filter((edge) => !edge.nodes.includes(nodeId))
 
-  saveNetwork(network)
+  saveNetwork()
 
   if (req.headers.get('Accept') === 'application/json') {
     return new Response(undefined, { status: 200 })
   }
 
-  const html = EdgeList({ network, oobSwap: 'outerHTML:#edge-list' }).toString()
+  const html = EdgeList({ oobSwap: 'outerHTML:#edge-list' }).toString()
   return new Response(html, {
     headers: {
       'Content-Type': 'text/html',

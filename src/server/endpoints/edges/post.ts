@@ -1,12 +1,9 @@
 import { BunRequest } from 'bun'
-import { MAX_EDGES_PER_NODE, Network } from 'server/network'
+import { MAX_EDGES_PER_NODE } from 'server/network'
 import { saveNetwork } from 'server/persistance'
 import { Edge } from 'server/templates/Edge'
 import z from 'zod'
-
-// const bodySchema = z.object({
-//   weight: z.number().min(1).or(z.string().regex(/^\d+$/).transform(Number)),
-// })
+import { network } from 'server/server'
 
 const bodySchema = z
   .object({
@@ -18,7 +15,7 @@ const bodySchema = z
     message: 'A node cannot connect to itself',
   })
 
-const handler = async (req: BunRequest<'/api/edges'>, network: Network) => {
+const handler = async (req: BunRequest<'/api/edges'>) => {
   let body
 
   const contentType = req.headers.get('Content-Type')
@@ -75,7 +72,7 @@ const handler = async (req: BunRequest<'/api/edges'>, network: Network) => {
     id: crypto.randomUUID(),
   }
   network.edges.push(newEdge)
-  saveNetwork(network)
+  saveNetwork()
 
   if (req.headers.get('Accept') === 'application/json') {
     return new Response('Created', { status: 201 })

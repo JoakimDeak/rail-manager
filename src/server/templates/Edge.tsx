@@ -1,15 +1,10 @@
-export const Edge = ({
-  edge,
-}: {
-  edge: {
-    nodes: {
-      id: string
-      name: string
-    }[]
-    weight: number
-    id: string
-  }
-}) => {
+import { Edge as EdgeType, Node } from '../network'
+
+type PopulatedEdge = Omit<EdgeType, 'nodes'> & {
+  nodes: Node[]
+}
+
+export const Edge = ({ edge }: { edge: PopulatedEdge }) => {
   return (
     <li class="flex items-center gap-2">
       <span>-</span>

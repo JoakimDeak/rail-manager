@@ -47,3 +47,5 @@ export const networkSchema = z
   })
 
 export type Network = z.infer<typeof networkSchema>
+export type Edge = Network['edges'][number]
+export type Node = Network['nodes'][number]

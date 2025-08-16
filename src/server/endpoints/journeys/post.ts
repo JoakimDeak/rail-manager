@@ -1,11 +1,11 @@
 import { BunRequest } from 'bun'
-import { PathMap } from 'server/pathfinding'
 import { messageHandler } from 'server/web-sockets'
 import z from 'zod'
+import { pathMap } from 'server/server'
 
 const bodySchema = z.object({ from: z.string(), to: z.string() })
 
-const handler = async (req: BunRequest, pathMap: PathMap) => {
+const handler = async (req: BunRequest<'/api/journeys'>) => {
   let body
   try {
     body = await req.json()

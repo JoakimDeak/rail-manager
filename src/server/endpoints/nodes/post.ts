@@ -4,6 +4,7 @@ import { MAX_EDGES_PER_NODE, Network } from 'server/network'
 import z from 'zod'
 import { Node } from 'server/templates/Node'
 import { NodeOptions } from 'server/templates/NodeOptions'
+import { network } from 'server/server'
 
 const bodySchema = z
   .object({
@@ -30,7 +31,7 @@ const bodySchema = z
     },
   )
 
-const handler = async (req: BunRequest<'/api/nodes'>, network: Network) => {
+const handler = async (req: BunRequest<'/api/nodes'>) => {
   let body
   const contentType = req.headers.get('Content-Type')
   if (contentType === 'application/json') {
@@ -97,7 +98,7 @@ const handler = async (req: BunRequest<'/api/nodes'>, network: Network) => {
     network.edges.push(...newEdges)
   }
 
-  saveNetwork(network)
+  saveNetwork()
 
   if (req.headers.get('Accept') === 'application/json') {
     return Response.json({ id: newNodeId }, { status: 201 })

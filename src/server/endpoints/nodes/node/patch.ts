@@ -4,12 +4,13 @@ import { saveNetwork } from 'server/persistance'
 import { EdgeList } from 'server/templates/EdgeList'
 import { Node } from 'server/templates/Node'
 import z from 'zod'
+import { network } from 'server/server'
 
 const bodySchema = z.object({
   name: z.string(),
 })
 
-const handler = async (req: BunRequest<'/api/nodes/:node'>, network: Network) => {
+const handler = async (req: BunRequest<'/api/nodes/:node'>) => {
   const nodeId = req.params.node
   if (!network.nodes.some((node) => node.id === nodeId)) {
     return new Response('Not found', { status: 404 })
@@ -50,7 +51,7 @@ const handler = async (req: BunRequest<'/api/nodes/:node'>, network: Network) =>
     1,
     { ...curr, name: data.name },
   )
-  saveNetwork(network)
+  saveNetwork()
 
   if (req.headers.get('Accept') === 'application/json') {
     return new Response(undefined, { status: 200 })
@@ -58,7 +59,7 @@ const handler = async (req: BunRequest<'/api/nodes/:node'>, network: Network) =>
 
   const html =
     Node({ node: { ...curr, name: data.name } }).toString() +
-    EdgeList({ network, oobSwap: 'outerHTML:#edge-list' }).toString()
+    EdgeList({ oobSwap: 'outerHTML:#edge-list' }).toString()
   return new Response(html, {
     headers: {
       'Content-Type': 'text/html',

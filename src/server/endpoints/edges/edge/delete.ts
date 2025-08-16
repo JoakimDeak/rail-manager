@@ -1,9 +1,8 @@
 import { BunRequest } from 'bun'
-import { Network } from 'server/network'
 import { saveNetwork } from 'server/persistance'
-import z from 'zod'
+import { network } from 'server/server'
 
-const handler = (req: BunRequest<'/api/edges/:edge'>, network: Network) => {
+const handler = (req: BunRequest<'/api/edges/:edge'>) => {
   const edgeId = req.params.edge
   if (!network.edges.some((edge) => edge.id === edgeId)) {
     return new Response('Not found', { status: 404 })
@@ -13,7 +12,7 @@ const handler = (req: BunRequest<'/api/edges/:edge'>, network: Network) => {
     network.edges.findIndex((edge) => edge.id === edgeId),
     1,
   )
-  saveNetwork(network)
+  saveNetwork()
 
   return new Response(undefined, { status: 200 })
 }

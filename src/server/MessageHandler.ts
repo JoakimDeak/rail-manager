@@ -7,7 +7,7 @@ export class MessageHandler {
   constructor(clients: Map<string, NodeWebSocket>) {
     this.clients = clients
     this.queues = new Map()
-    clients.keys().forEach((nodeId) => this.queues.set(nodeId, []))
+    clients.forEach((_, nodeId) => this.queues.set(nodeId, []))
   }
 
   public send(client: string, message: string) {

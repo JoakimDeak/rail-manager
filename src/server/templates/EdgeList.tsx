@@ -1,7 +1,8 @@
 import { Network } from 'server/network'
 import { Edge } from './Edge'
+import { network } from 'server/server'
 
-export const EdgeList = ({ network, oobSwap }: { network: Network; oobSwap?: string }) => {
+export const EdgeList = ({ oobSwap }: { oobSwap?: string }) => {
   const edgesWithNodeNames = network.edges.map((edge) => {
     const [a, b] = network.nodes.filter((node) => edge.nodes.includes(node.id))
     return { ...edge, nodes: [a, b] }

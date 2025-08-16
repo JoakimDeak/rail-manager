@@ -1,14 +1,14 @@
 import { BunRequest } from 'bun'
-import { Network } from 'server/network'
 import { saveNetwork } from 'server/persistance'
 import { Edge } from 'server/templates/Edge'
 import z from 'zod'
+import { network } from 'server/server'
 
 const bodySchema = z.object({
   weight: z.number().min(1).or(z.string().regex(/^\d+$/).transform(Number)),
 })
 
-const handler = async (req: BunRequest<'/api/edges/:edge'>, network: Network) => {
+const handler = async (req: BunRequest<'/api/edges/:edge'>) => {
   const edgeId = req.params.edge
   if (!network.edges.some((edge) => edge.id === edgeId)) {
     return new Response('Not found', { status: 404 })
@@ -45,7 +45,7 @@ const handler = async (req: BunRequest<'/api/edges/:edge'>, network: Network) =>
     1,
     { ...curr, weight: data.weight },
   )
-  saveNetwork(network)
+  saveNetwork()
 
   if (req.headers.get('Accept') === 'application/json') {
     return new Response('Patched', { status: 200 })
