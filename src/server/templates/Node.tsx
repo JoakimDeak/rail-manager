@@ -2,7 +2,6 @@ import { Node as NodeType } from 'server/network'
 import { network } from 'server/server'
 import { ExternalNodeIcon } from './ExternalNodeIcon'
 import { InternalNodeIcon } from './InternalNodeIcons'
-import { IsolatedNodeIcon } from './IsolatedNodeIcon'
 
 export const Node = ({ node }: { node: NodeType }) => {
   const connectedEdges = network.edges.filter((edge) => edge.nodes.includes(node.id)).length

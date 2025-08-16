@@ -66,7 +66,6 @@ Bun.serve({
         return journeysPostHandler(req)
       },
     },
-    '/dist/globals.css': new Response(Bun.file('dist/globals.css')),
     '/': index,
   },
   fetch(req, server) {

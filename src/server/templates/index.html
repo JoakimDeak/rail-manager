@@ -5,9 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RM</title>
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js"></script>
-    <link rel="stylesheet" href="/dist/globals.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <link rel="icon" type="image/x-icon" href="/src/assets/minecart.ico" />
+    <style>
+      .no-scrollbar {
+        scrollbar-width: none;
+        ::-webkit-scrollbar {
+          display: none;
+        }
+      }
+
+      .dotted-bg {
+        --dot-space: 15px;
+        --dot-size: 1px;
+        --dot-color: oklch(69.6% 0.17 162.48);
+        background-color: white;
+        background-image: radial-gradient(
+          circle,
+          var(--dot-color) var(--dot-size),
+          transparent var(--dot-size)
+        );
+        background-size: var(--dot-space) var(--dot-space);
+      }
+    </style>
   </head>
   <body class="dotted-bg flex min-h-screen justify-center pt-[15vh] font-mono">
     <div class="flex h-fit gap-8 rounded-[8px] bg-white p-8">

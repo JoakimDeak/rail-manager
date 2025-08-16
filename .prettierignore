@@ -1,5 +1,3 @@
 node_modules/
-dist/
-tailwindcss
 src/client/
 src/server/persistance/*.json

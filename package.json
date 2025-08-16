@@ -2,9 +2,7 @@
   "name": "rail-manager",
   "scripts": {
     "start": "bun src/server/server.ts",
-    "dev": "bun --watch src/server/server.ts & bun build:tailwind:watch",
-    "build:tailwind": "./tailwindcss -i ./src/server/templates/globals.css -o ./dist/globals.css --minify",
-    "build:tailwind:watch": "./tailwindcss -i ./src/server/templates/globals.css -o ./dist/globals.css --watch",
+    "dev": "bun --watch src/server/server.ts",
     "format:prettier": "prettier --write src/server"
   },
   "devDependencies": {
