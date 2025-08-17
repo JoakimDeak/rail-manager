@@ -26,7 +26,6 @@ const handler = async (req: BunRequest<'/api/journeys'>) => {
   }
 
   const path = getPath(from.id, to.id)
-  console.log({ from: from.id, to: to.id, path })
 
   if (!path) {
     return new Response("Unknown node or path doesn't exist", { status: 400 })

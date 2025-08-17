@@ -4,14 +4,15 @@ local statusRes = http.get(apiBase .. "/status")
 if not statusRes then
     error("Could not connect to server")
 end
-local id = nil
-if not fs.exists("./node-id.txt") then
+local configuredNode = nil
+if not fs.exists("./node.json") then
     local nodesRes = textutils.unserialiseJSON(http.get(apiBase .. "/nodes", {
         ["Accept"] = "application/json"
     }).readAll())
 
     print("Select node")
     print("-----")
+    -- TODO: Print multiple on line if the list is taller than the terminal window
     for _, node in pairs(nodesRes.nodes) do
         print(node.name)
     end
@@ -20,30 +21,30 @@ if not fs.exists("./node-id.txt") then
 
     for _, node in pairs(nodesRes.nodes) do
         if node.name == nodeName then
-            id = node.id
+            configuredNode = node
             break
         end
     end
 
-    local idFile = fs.open("./node-id.txt", "w")
-    idFile.write(id)
+    local idFile = fs.open("./node.json", "w")
+    idFile.write(textutils.serialiseJSON(configuredNode))
     idFile.close()
 else
-    local idFile = fs.open("./node-id.txt", "r")
-    id = idFile.read()
+    local idFile = fs.open("./node.json", "r")
+    configuredNode = textutils.unserialiseJSON(idFile.readAll())
     idFile.close()
 end
 
-local nodeRes = http.get(apiBase .. "/nodes/" .. id)
-if not nodeRes then
+local nodeRes = http.get(apiBase .. "/nodes/" .. configuredNode.id)
+if not nodeRes or not configuredNode then
     print("Node could not be found resetting config")
     fs.delete("./node-id.txt")
     return
 end
 
-print("Running client for: " .. id)
+print("Running client for: " .. configuredNode.name)
 
-local edgesRes = textutils.unserialiseJSON(http.get(apiBase .. "/nodes/" .. id .. "/edges", {
+local edgesRes = textutils.unserialiseJSON(http.get(apiBase .. "/nodes/" .. configuredNode.id .. "/edges", {
     ["Accept"] = "application/json"
 }).readAll())
 local numOfEdges = table.getn(edgesRes.edges)
@@ -55,8 +56,31 @@ end
 
 if numOfEdges == 1 then
     print("Running as station")
-    -- TODO: Add station client and just a node list that does a post request should be enough.
-    -- Doubt the latency would be so high you could get to a junction too early
+    while (true) do
+        term.clear()
+        print("Select destination")
+        print("-----")
+        local nodesRes = textutils.unserialiseJSON(http.get(apiBase .. "/nodes", {
+            ["Accept"] = "application/json"
+        }).readAll())
+        for _, node in pairs(nodesRes.nodes) do
+            print(node.name)
+        end
+        print("----")
+        local destination = read()
+        for _, node in pairs(nodesRes.nodes) do
+            if destination == node.name then
+                http.post(apiBase .. "/journeys", textutils.serialiseJSON({
+                    ["from"] = configuredNode.name,
+                    ["to"] = destination
+                }))
+                redstone.setOutput("bottom", true)
+                sleep(1)
+                redstone.setOutput("bottom", false)
+                break
+            end
+        end
+    end
     return
 end
 
@@ -65,10 +89,10 @@ print("Running as junction")
 local connectedNodes = {}
 for i, edge in pairs(edgesRes.edges) do
     local connectedNode = nil
-    if edge.nodes[1] == id then
-        connectedNode = edge.nodes[2]
+    if edge.node1 == configuredNode.id then
+        connectedNode = edge.node2
     else
-        connectedNode = edge.nodes[1]
+        connectedNode = edge.node1
     end
     connectedNodes[i] = connectedNode
 end
@@ -109,7 +133,7 @@ end
 local routeConfigFile = fs.open("./route-config.json", "r")
 local config = textutils.unserialiseJSON(routeConfigFile.readAll())
 
-local ws = http.websocket("ws://localhost:3000?nodeId=" .. id)
+local ws = http.websocket("ws://localhost:3000?nodeId=" .. configuredNode.id)
 if ws then
     print("Connection opened")
 

@@ -240,4 +240,3 @@ export const deleteNode = ({ id }: { id: number }) => {
 
 const nodes = getNodes()
 const edges = getEdges()
-console.log({ nodes, edges })
