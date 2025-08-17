@@ -1,6 +1,6 @@
-import { PopulatedEdge } from '../network'
+import { EdgeWithNodeName } from 'server/db'
 
-export const Edge = ({ edge }: { edge: PopulatedEdge }) => {
+export const Edge = ({ edge }: { edge: EdgeWithNodeName }) => {
   return (
     <li class="flex items-start gap-2 has-checked:last:h-20">
       <span class="leading-10">-</span>

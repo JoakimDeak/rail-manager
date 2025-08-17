@@ -1,6 +1,5 @@
 import { BunRequest } from 'bun'
-import { db } from 'server'
-import { PopulatedEdge } from 'server/network'
+import { getEdgeWithNodeName, updateEdge } from 'server/db'
 import { Edge } from 'server/templates/Edge'
 import z from 'zod'
 
@@ -9,7 +8,7 @@ const bodySchema = z.object({
 })
 
 const handler = async (req: BunRequest<'/api/edges/:edge'>) => {
-  const edgeId = Number(req.params.edge)
+  const id = Number(req.params.edge)
 
   let body
   const contentType = req.headers.get('Content-Type')
@@ -37,14 +36,7 @@ const handler = async (req: BunRequest<'/api/edges/:edge'>) => {
   }
 
   try {
-    db.run<[number, number]>(
-      `
-        UPDATE edges
-        SET weight = ?2
-        WHERE edges.id = ?1
-      `,
-      [edgeId, data.weight],
-    )
+    updateEdge({ id, weight: data.weight })
   } catch (_) {
     return new Response(undefined, { status: 500 })
   }
@@ -53,20 +45,7 @@ const handler = async (req: BunRequest<'/api/edges/:edge'>) => {
     return new Response(undefined, { status: 200 })
   }
 
-  const edge = db
-    .query<PopulatedEdge, [number]>(
-      `
-            SELECT 
-              edges.*,
-              node1.name as node1Name,
-              node2.name as node2Name
-            FROM edges
-            LEFT JOIN nodes node1 ON edges.node1 = node1.id
-            lEFT JOIN nodes node2 ON edges.node2 = node2.id
-            WHERE edges.id = ?1
-          `,
-    )
-    .get(edgeId)
+  const edge = getEdgeWithNodeName({ id })
 
   if (!edge) {
     return new Response(undefined, { status: 500 })

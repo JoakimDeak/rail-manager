@@ -1,4 +1,4 @@
-import { Edge, Node } from './network'
+import { Edge, Node } from './db'
 
 const getParentGraph = (start: number, nodes: Node[], edges: Edge[]) => {
   const dists = nodes.reduce(

@@ -1,13 +1,13 @@
 import { BunRequest } from 'bun'
-import { db } from 'server'
-import { PopulatedEdge } from 'server/network'
+import { createEdge, getEdgeWithNodeName, getNodesWithEdgeCount } from 'server/db'
 import { Edge } from 'server/templates/Edge'
+import { NodeList } from 'server/templates/NodeList'
 import z from 'zod'
 
 const bodySchema = z
   .object({
-    from: z.string(),
-    to: z.string(),
+    from: z.number().or(z.string().regex(/^\d+$/).transform(Number)),
+    to: z.number().or(z.string().regex(/^\d+$/).transform(Number)),
     weight: z.number().min(1).or(z.string().regex(/^\d+$/).transform(Number)),
   })
   .refine((data) => data.from !== data.to, {
@@ -43,14 +43,7 @@ const handler = async (req: BunRequest<'/api/edges'>) => {
 
   let id: number
   try {
-    const res = db.run<[string, string, number]>(
-      `
-        INSERT INTO edges (node1,node2,weight)
-        VALUES(?1,?2,?3)
-      `,
-      data.from > data.to ? [data.to, data.from, data.weight] : [data.from, data.to, data.weight],
-    )
-    id = Number(res.lastInsertRowid)
+    id = createEdge({ from: data.from, to: data.to, weight: data.weight })
   } catch (e) {
     return new Response(undefined, { status: 500 })
   }
@@ -59,27 +52,15 @@ const handler = async (req: BunRequest<'/api/edges'>) => {
     return new Response(undefined, { status: 201 })
   }
 
-  // TODO: Move this type of query somewhere we can reuse it easily
-  const edge = db
-    .query<PopulatedEdge, [number]>(
-      `
-          SELECT 
-            edges.*,
-            node1.name as node1Name,
-            node2.name as node2Name
-          FROM edges
-          LEFT JOIN nodes node1 ON edges.node1 = node1.id
-          LEFT JOIN nodes node2 ON edges.node2 = node2.id
-          WHERE edges.id = ?1
-        `,
-    )
-    .get(id)
+  const edge = getEdgeWithNodeName({ id })
 
   if (!edge) {
     return new Response(undefined, { status: 500 })
   }
+  const nodes = getNodesWithEdgeCount()
 
-  const html = Edge({ edge }).toString()
+  const html =
+    Edge({ edge }).toString() + NodeList({ nodes, oobSwap: 'outerHTML:#node-list' }).toString()
   return new Response(html, {
     headers: {
       'Content-Type': 'text/html',

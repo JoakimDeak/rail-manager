@@ -6,7 +6,7 @@ const config = {
   semi: false,
   tabWidth: 2,
   printWidth: 100,
-  plugins: ['prettier-plugin-tailwindcss'],
+  plugins: ['prettier-plugin-tailwindcss', 'prettier-plugin-organize-imports'],
 }
 
 export default config

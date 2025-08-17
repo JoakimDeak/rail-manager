@@ -1,41 +1,17 @@
-import { BunRequest as _BunRequest } from 'bun'
-import nodesPostHandler from './endpoints/nodes/post'
-import nodesGetHandler from './endpoints/nodes/get'
-import nodesOptionsGetHandler from './endpoints/nodes/options/get'
-import nodeDeleteHandler from './endpoints/nodes/node/delete'
-import nodePatchHandler from './endpoints/nodes/node/patch'
-import nodeGetHandler from './endpoints/nodes/node/get'
-import nodeEdgesGetHandler from './endpoints/nodes/node/edges/get'
-import edgesGetHandler from './endpoints/edges/get'
-import edgesPostHandler from './endpoints/edges/post'
 import edgeDeleteHandler from './endpoints/edges/edge/delete'
 import edgePatchHandler from './endpoints/edges/edge/patch'
+import edgesGetHandler from './endpoints/edges/get'
+import edgesPostHandler from './endpoints/edges/post'
 import journeysPostHandler from './endpoints/journeys/post'
+import nodesGetHandler from './endpoints/nodes/get'
+import nodeDeleteHandler from './endpoints/nodes/node/delete'
+import nodeEdgesGetHandler from './endpoints/nodes/node/edges/get'
+import nodeGetHandler from './endpoints/nodes/node/get'
+import nodePatchHandler from './endpoints/nodes/node/patch'
+import nodesOptionsGetHandler from './endpoints/nodes/options/get'
+import nodesPostHandler from './endpoints/nodes/post'
 import index from './templates/index.html'
 import handlers from './web-sockets'
-import Database from 'bun:sqlite'
-
-const db = new Database('src/server/db.sqlite', { create: true })
-db.run(`PRAGMA foreign_keys = ON;`)
-db.run(`
-  CREATE TABLE IF NOT EXISTS nodes (
-    id   INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL
-  );
-`)
-db.run(`
-  CREATE TABLE IF NOT EXISTS edges (
-    id      INTEGER PRIMARY KEY AUTOINCREMENT,
-    weight  REAL NOT NULL,
-    node1   INTEGER NOT NULL,
-    node2   INTEGER NOT NULL,
-    FOREIGN KEY (node1) REFERENCES Nodes(id) ON DELETE CASCADE,
-    FOREIGN KEY (node2) REFERENCES Nodes(id) ON DELETE CASCADE,
-    CHECK (node1 < node2),
-    UNIQUE (node1, node2)
-  );
-`)
-export { db }
 
 const server = Bun.serve({
   routes: {

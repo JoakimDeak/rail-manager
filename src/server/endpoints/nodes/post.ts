@@ -1,9 +1,8 @@
 import { BunRequest } from 'bun'
-import z from 'zod'
+import { createNode, getNodes } from 'server/db'
 import { Node as NodeTemplate } from 'server/templates/Node'
 import { NodeOptions } from 'server/templates/NodeOptions'
-import { db } from 'server'
-import { Edge, Node } from 'server/network'
+import z from 'zod'
 
 const bodySchema = z.object({
   name: z.string(),
@@ -37,14 +36,7 @@ const handler = async (req: BunRequest<'/api/nodes'>) => {
 
   let nodeId: number
   try {
-    const res = db.run<[string]>(
-      `
-      INSERT INTO nodes (name)
-      VALUES(?1)
-    `,
-      [data.name],
-    )
-    nodeId = Number(res.lastInsertRowid)
+    nodeId = createNode({ name: data.name })
   } catch (e: any) {
     if (e.code === 'SQLITE_CONSTRAINT_UNIQUE') {
       return new Response(
@@ -61,12 +53,11 @@ const handler = async (req: BunRequest<'/api/nodes'>) => {
     return Response.json({ id: nodeId }, { status: 201 })
   }
 
-  const nodes = db.query<Node, never[]>(`SELECT * FROM nodes`).all()
+  const nodes = getNodes()
 
   const html =
     NodeTemplate({
-      node: { id: nodeId, name: data.name },
-      numOfConnectedEdges: 0,
+      node: { id: nodeId, name: data.name, edgeCount: 0 },
     }).toString() +
     NodeOptions({
       nodes,

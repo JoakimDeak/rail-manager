@@ -1,6 +1,5 @@
 import { BunRequest } from 'bun'
-import { db } from 'server'
-import { Edge, Node } from 'server/network'
+import { getEdges, getNodes } from 'server/db'
 import { getAllPaths } from 'server/pathfinding'
 import { messageHandler } from 'server/web-sockets'
 import z from 'zod'
@@ -20,23 +19,10 @@ const handler = async (req: BunRequest<'/api/journeys'>) => {
     return Response.json(z.treeifyError(error))
   }
 
-  const nodes = db
-    .query<Node, never[]>(
-      `
-        SELECT *
-        FROM nodes
-      `,
-    )
-    .all()
-  const edges = db
-    .query<Edge, never[]>(
-      `
-        SELECT *
-        FROM edges
-      `,
-    )
-    .all()
+  const nodes = getNodes()
+  const edges = getEdges()
 
+  // TODO: Cache this in some way
   const paths = getAllPaths(nodes, edges)
 
   let path = paths[`${data.from},${data.to}`]

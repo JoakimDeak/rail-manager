@@ -1,10 +1,10 @@
-import { Fragment } from '@kitajs/html/jsx-runtime'
+import { Node } from 'server/db'
 
-export const NodeOptions = ({ nodes, oobSwap }: { nodes: Network['nodes']; oobSwap?: string }) => {
+export const NodeOptions = ({ nodes, oobSwap }: { nodes: Node[]; oobSwap?: string }) => {
   return (
     <optgroup hx-swap-oob={oobSwap}>
       {nodes.map((node) => (
-        <option value={node.id}>{node.name}</option>
+        <option value={node.id.toString()}>{node.name}</option>
       ))}
     </optgroup>
   )

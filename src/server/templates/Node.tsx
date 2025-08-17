@@ -1,23 +1,17 @@
-import { Node as NodeType } from 'server/network'
+import { NodeWithEdgeCount } from 'server/db'
 import { ExternalNodeIcon } from './ExternalNodeIcon'
 import { InternalNodeIcon } from './InternalNodeIcons'
 
-export const Node = ({
-  node,
-  numOfConnectedEdges,
-}: {
-  node: NodeType
-  numOfConnectedEdges: number
-}) => {
+export const Node = ({ node }: { node: NodeWithEdgeCount }) => {
   return (
     <li class="flex items-start justify-between gap-2 has-checked:last:h-20">
       <span class="leading-10">-</span>
       <div class="group relative flex w-full items-center justify-between gap-4 p-2 shadow-black outline-black hover:shadow-[2px_2px_0px] hover:outline has-checked:shadow-[2px_2px_0px] has-checked:outline">
         <span class="w-[20ch] truncate">{node.name}</span>
         <div class="peer flex items-center gap-2 opacity-0 group-hover:opacity-100 has-checked:opacity-100">
-          {numOfConnectedEdges > 0 && (
+          {node.edgeCount > 0 && (
             <span class="material-icons w-fit shadow-black outline-black">
-              {numOfConnectedEdges === 1 ? <ExternalNodeIcon /> : <InternalNodeIcon />}
+              {node.edgeCount === 1 ? <ExternalNodeIcon /> : <InternalNodeIcon />}
             </span>
           )}
           <label class="flex">

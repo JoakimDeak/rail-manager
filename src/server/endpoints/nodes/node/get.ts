@@ -1,18 +1,9 @@
 import { BunRequest } from 'bun'
-import { db } from 'server'
-import { Node } from 'server/network'
+import { getNode } from 'server/db'
 
 const handler = (req: BunRequest<'/api/nodes/:node'>) => {
-  const nodeId = Number(req.params.node)
-  const node = db
-    .query<Node, [number]>(
-      `
-        SELECT *
-        FROM nodes
-        WHERE nodes.id = ?1
-      `,
-    )
-    .get(nodeId)
+  const id = Number(req.params.node)
+  const node = getNode({ id })
   if (!node) {
     return new Response(undefined, { status: 404 })
   }

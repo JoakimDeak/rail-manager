@@ -1,7 +1,7 @@
+import { EdgeWithNodeName } from 'server/db'
 import { Edge } from './Edge'
-import { PopulatedEdge } from 'server/network'
 
-export const EdgeList = ({ oobSwap, edges }: { edges: PopulatedEdge[]; oobSwap?: string }) => {
+export const EdgeList = ({ oobSwap, edges }: { edges: EdgeWithNodeName[]; oobSwap?: string }) => {
   // TODO: Only do min h if theres at least one edge
   return (
     <ul

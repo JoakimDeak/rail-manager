@@ -1,6 +1,5 @@
 import { BunRequest } from 'bun'
-import { Node, PopulatedEdge } from 'server/network'
-import { db } from 'server'
+import { getEdgesWithNodeName, getNodeWithEdgeCount, updateNode } from 'server/db'
 import { EdgeList } from 'server/templates/EdgeList'
 import { Node as NodeTemplate } from 'server/templates/Node'
 import z from 'zod'
@@ -10,7 +9,7 @@ const bodySchema = z.object({
 })
 
 const handler = async (req: BunRequest<'/api/nodes/:node'>) => {
-  const nodeId = Number(req.params.node)
+  const id = Number(req.params.node)
 
   let body
   const contentType = req.headers.get('Content-Type')
@@ -38,14 +37,7 @@ const handler = async (req: BunRequest<'/api/nodes/:node'>) => {
   }
 
   try {
-    db.run<[number, string]>(
-      `
-        UPDATE nodes
-        SET name = ?2
-        WHERE nodes.id = ?1
-      `,
-      [nodeId, data.name],
-    )
+    updateNode({ id, name: data.name })
   } catch (e) {
     return new Response(undefined, { status: 500 })
   }
@@ -54,36 +46,15 @@ const handler = async (req: BunRequest<'/api/nodes/:node'>) => {
     return new Response(undefined, { status: 200 })
   }
 
-  const node = db.query<Node, [number]>(`SELECT * FROM nodes WHERE nodes.id = ?1`).get(nodeId)
+  const node = getNodeWithEdgeCount({ id })
   if (!node) {
     return new Response(undefined, { status: 500 })
   }
-  const numOfConnectedEdges = Number(
-    db.run<[number]>(
-      `
-      SELECT COUNT(*)
-      FROM edges
-      WHERE edges.node1 = ?1 OR edges.node2 = ?1
-    `,
-      [nodeId],
-    ).lastInsertRowid,
-  )
-  const edges = db
-    .query<PopulatedEdge, never[]>(
-      `
-        SELECT 
-          edges.*,
-          node1.name as node1Name,
-          node2.name as node2Name
-        FROM edges
-        LEFT JOIN nodes node1 ON edges.node1 = node1.id
-        lEFT JOIN nodes node2 ON edges.node2 = node2.id
-      `,
-    )
-    .all()
+
+  const edges = getEdgesWithNodeName()
 
   const html =
-    NodeTemplate({ node, numOfConnectedEdges }).toString() +
+    NodeTemplate({ node }).toString() +
     EdgeList({ oobSwap: 'outerHTML:#edge-list', edges }).toString()
   return new Response(html, {
     headers: {
