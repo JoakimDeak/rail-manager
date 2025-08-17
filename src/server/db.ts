@@ -1,4 +1,5 @@
 import Database from 'bun:sqlite'
+import { invalidateCache } from './pathfinding'
 
 export type Node = {
   id: number
@@ -51,21 +52,24 @@ export const createEdge = ({ from, to, weight }: { from: number; to: number; wei
     `,
     from > to ? [to, from, weight] : [from, to, weight],
   )
+  invalidateCache()
   return Number(res.lastInsertRowid)
 }
 
 export const deleteEdge = ({ id }: { id: number }) => {
-  db.run<[number]>(
+  const res = db.run<[number]>(
     `
       DELETE FROM edges
       WHERE edges.id = ?1
     `,
     [id],
   )
+  invalidateCache()
+  return res
 }
 
 export const updateEdge = ({ id, weight }: { id: number; weight: number }) => {
-  db.run<[number, number]>(
+  const res = db.run<[number, number]>(
     `
       UPDATE edges
       SET weight = ?2
@@ -73,6 +77,8 @@ export const updateEdge = ({ id, weight }: { id: number; weight: number }) => {
     `,
     [id, weight],
   )
+  invalidateCache()
+  return res
 }
 
 export const getEdges = () => {
@@ -166,6 +172,18 @@ export const getNode = ({ id }: { id: number }) => {
     .get(id)
 }
 
+export const getNodeByName = ({ name }: { name: string }) => {
+  return db
+    .query<Node, [string]>(
+      `
+      SELECT *
+      FROM nodes
+      WHERE nodes.name = ?1
+    `,
+    )
+    .get(name)
+}
+
 export const getNodeWithEdgeCount = ({ id }: { id: number }) => {
   return db
     .query<NodeWithEdgeCount, [number]>(
@@ -209,11 +227,17 @@ export const updateNode = ({ id, name }: { id: number; name: string }) => {
 }
 
 export const deleteNode = ({ id }: { id: number }) => {
-  db.run<[number]>(
+  const res = db.run<[number]>(
     `
       DELETE FROM nodes
       WHERE id = ?1
     `,
     [id],
   )
+  invalidateCache()
+  return res
 }
+
+const nodes = getNodes()
+const edges = getEdges()
+console.log({ nodes, edges })

@@ -1,11 +1,10 @@
 import { BunRequest } from 'bun'
-import { getEdges, getNodes } from 'server/db'
-import { getAllPaths } from 'server/pathfinding'
+import { getNodeByName } from 'server/db'
+import { getPath } from 'server/pathfinding'
 import { messageHandler } from 'server/web-sockets'
 import z from 'zod'
 
-// TODO: Use names here instead of IDs
-const bodySchema = z.object({ from: z.number(), to: z.number() })
+const bodySchema = z.object({ from: z.string(), to: z.string() })
 
 const handler = async (req: BunRequest<'/api/journeys'>) => {
   let body
@@ -19,16 +18,16 @@ const handler = async (req: BunRequest<'/api/journeys'>) => {
     return Response.json(z.treeifyError(error))
   }
 
-  const nodes = getNodes()
-  const edges = getEdges()
+  const from = getNodeByName({ name: data.from })
+  const to = getNodeByName({ name: data.to })
 
-  // TODO: Cache this in some way
-  const paths = getAllPaths(nodes, edges)
-
-  let path = paths[`${data.from},${data.to}`]
-  if (!path) {
-    path = paths[`${data.to},${data.from}`]?.toReversed()
+  if (!from || !to) {
+    return new Response(undefined, { status: 500 })
   }
+
+  const path = getPath(from.id, to.id)
+  console.log({ from: from.id, to: to.id, path })
+
   if (!path) {
     return new Response("Unknown node or path doesn't exist", { status: 400 })
   }

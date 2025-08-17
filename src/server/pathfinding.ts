@@ -1,4 +1,17 @@
-import { Edge, Node } from './db'
+import { Edge, getEdges, getNodes, Node } from './db'
+
+type PathKey = `${number},${number}`
+const getPathKey = (from: number, to: number) => {
+  return `${from},${to}` as const satisfies PathKey
+}
+
+const pathCache = new Map<PathKey, number[] | undefined>()
+const parentGraphCache = new Map<number, Record<number, number>>()
+
+export const invalidateCache = () => {
+  pathCache.clear()
+  parentGraphCache.clear()
+}
 
 const getParentGraph = (start: number, nodes: Node[], edges: Edge[]) => {
   const dists = nodes.reduce(
@@ -15,7 +28,7 @@ const getParentGraph = (start: number, nodes: Node[], edges: Edge[]) => {
 
   const queue = nodes.slice().map(({ id }) => id)
   const visited = new Set<number>()
-  const parents: Partial<Record<number, number>> = {}
+  const parents: Record<number, number> = {}
 
   while (queue.length > 0) {
     const curr = queue
@@ -54,7 +67,7 @@ const getParentGraph = (start: number, nodes: Node[], edges: Edge[]) => {
   return parents
 }
 
-const pathfind = (parentGraph: Partial<Record<number, number>>, end: number) => {
+const pathfind = (parentGraph: Record<number, number>, end: number) => {
   const path: number[] = [end]
   let prev = parentGraph[end]
   while (prev !== undefined) {
@@ -69,20 +82,38 @@ const pathfind = (parentGraph: Partial<Record<number, number>>, end: number) => 
   return path.toReversed()
 }
 
-export const getAllPaths = (nodes: Node[], edges: Edge[]) => {
-  const paths: Partial<Record<`${number},${number}`, number[]>> = {}
-  const parentGraphs = nodes.reduce(
-    (graphs, node) => {
-      graphs[node.id] = getParentGraph(node.id, nodes, edges)
-      return graphs
-    },
-    {} as Record<number, Partial<Record<number, number>>>,
-  )
+export const getPath = (from: number, to: number) => {
+  const pathKey = getPathKey(from, to)
+  const reversedKey = getPathKey(to, from)
 
-  for (let i = 0; i < nodes.length - 1; i++) {
-    for (let j = i + 1; j < nodes.length; j++) {
-      paths[`${nodes[i].id},${nodes[j].id}`] = pathfind(parentGraphs[nodes[i].id], nodes[j].id)
-    }
+  if (pathCache.has(pathKey)) {
+    return pathCache.get(pathKey)
+  } else if (pathCache.has(reversedKey)) {
+    pathCache.set(pathKey, pathCache.get(reversedKey)?.toReversed())
+    return pathCache.get(pathKey)
   }
-  return paths
+
+  const cachedParentGraph = parentGraphCache.get(from)
+  if (cachedParentGraph) {
+    const res = pathfind(cachedParentGraph, to)
+    pathCache.set(pathKey, res)
+    return res
+  }
+  const cachedReversedParentGraph = parentGraphCache.get(to)
+  if (cachedReversedParentGraph) {
+    const res = pathfind(cachedReversedParentGraph, from)?.toReversed()
+    pathCache.set(pathKey, res)
+    return res
+  }
+
+  const nodes = getNodes()
+  const edges = getEdges()
+
+  const parentGraph = getParentGraph(from, nodes, edges)
+  parentGraphCache.set(from, parentGraph)
+
+  const path = pathfind(parentGraph, to)
+  pathCache.set(pathKey, path)
+
+  return path
 }
