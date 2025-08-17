@@ -1,32 +1,54 @@
 import { BunRequest } from 'bun'
+import { db } from 'server'
+import { Edge, Node } from 'server/network'
+import { getAllPaths } from 'server/pathfinding'
 import { messageHandler } from 'server/web-sockets'
 import z from 'zod'
-import { pathMap } from 'server/server'
 
-const bodySchema = z.object({ from: z.string(), to: z.string() })
+// TODO: Use names here instead of IDs
+const bodySchema = z.object({ from: z.number(), to: z.number() })
 
 const handler = async (req: BunRequest<'/api/journeys'>) => {
   let body
   try {
     body = await req.json()
   } catch (_) {
-    return new Response('Invalid body', { status: 400 })
+    return new Response(undefined, { status: 400 })
   }
   const { data, error } = bodySchema.safeParse(body)
   if (error) {
     return Response.json(z.treeifyError(error))
   }
 
-  let path = pathMap[`${data.from},${data.to}`]
+  const nodes = db
+    .query<Node, never[]>(
+      `
+        SELECT *
+        FROM nodes
+      `,
+    )
+    .all()
+  const edges = db
+    .query<Edge, never[]>(
+      `
+        SELECT *
+        FROM edges
+      `,
+    )
+    .all()
+
+  const paths = getAllPaths(nodes, edges)
+
+  let path = paths[`${data.from},${data.to}`]
   if (!path) {
-    path = pathMap[`${data.to},${data.from}`]?.toReversed()
+    path = paths[`${data.to},${data.from}`]?.toReversed()
   }
   if (!path) {
     return new Response("Unknown node or path doesn't exist", { status: 400 })
   }
 
   for (let i = 1; i < path.length - 1; i++) {
-    messageHandler.send(path[i], `${path[i - 1]},${path[i + 1]}`)
+    messageHandler.send(path[i].toString(), `${path[i - 1]},${path[i + 1]}`)
   }
 
   return new Response()

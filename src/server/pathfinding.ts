@@ -1,14 +1,7 @@
-import z from 'zod'
-import { Network } from './network'
+import { Edge, Node } from './network'
 
-export const pathMapSchema = z.record(
-  z.templateLiteral([z.string(), ',', z.string()]),
-  z.array(z.string()).or(z.undefined()),
-)
-export type PathMap = z.infer<typeof pathMapSchema>
-
-const getParentGraph = (start: string, network: Network) => {
-  const dists = network.nodes.reduce(
+const getParentGraph = (start: number, nodes: Node[], edges: Edge[]) => {
+  const dists = nodes.reduce(
     (acc, curr) => {
       if (curr.id === start) {
         acc[curr.id] = 0
@@ -20,9 +13,9 @@ const getParentGraph = (start: string, network: Network) => {
     {} as Record<string, number>,
   )
 
-  const queue = network.nodes.slice().map(({ id }) => id)
-  const visited = new Set<string>()
-  const parents: Partial<Record<string, string>> = {}
+  const queue = nodes.slice().map(({ id }) => id)
+  const visited = new Set<number>()
+  const parents: Partial<Record<number, number>> = {}
 
   while (queue.length > 0) {
     const curr = queue
@@ -34,7 +27,7 @@ const getParentGraph = (start: string, network: Network) => {
           }
           return min
         },
-        undefined as string | undefined,
+        undefined as number | undefined,
       )
     if (curr === undefined) {
       break
@@ -42,10 +35,10 @@ const getParentGraph = (start: string, network: Network) => {
 
     visited.add(curr)
 
-    const neighbours = network.edges
-      .filter(({ nodes: [a, b] }) => curr === a || curr === b)
-      .map(({ nodes: [a, b], weight }) => ({
-        node: curr === a ? b : a,
+    const neighbours = edges
+      .filter(({ node1, node2 }) => curr === node1 || curr == node2)
+      .map(({ node1, node2, weight }) => ({
+        node: curr === node1 ? node2 : node1,
         weight,
       }))
 
@@ -61,8 +54,8 @@ const getParentGraph = (start: string, network: Network) => {
   return parents
 }
 
-const pathfind = (parentGraph: Partial<Record<string, string>>, end: string) => {
-  const path: string[] = [end]
+const pathfind = (parentGraph: Partial<Record<number, number>>, end: number) => {
+  const path: number[] = [end]
   let prev = parentGraph[end]
   while (prev !== undefined) {
     path.push(prev)
@@ -76,23 +69,20 @@ const pathfind = (parentGraph: Partial<Record<string, string>>, end: string) => 
   return path.toReversed()
 }
 
-export const getAllPaths = (network: Network) => {
-  const paths: Partial<Record<`${string},${string}`, string[]>> = {}
-  const parentGraphs = network.nodes.reduce(
+export const getAllPaths = (nodes: Node[], edges: Edge[]) => {
+  const paths: Partial<Record<`${number},${number}`, number[]>> = {}
+  const parentGraphs = nodes.reduce(
     (graphs, node) => {
-      graphs[node.id] = getParentGraph(node.id, network)
+      graphs[node.id] = getParentGraph(node.id, nodes, edges)
       return graphs
     },
-    {} as Record<string, Partial<Record<string, string>>>,
+    {} as Record<number, Partial<Record<number, number>>>,
   )
 
-  for (let i = 0; i < network.nodes.length - 1; i++) {
-    for (let j = i + 1; j < network.nodes.length; j++) {
-      paths[`${network.nodes[i].id},${network.nodes[j].id}`] = pathfind(
-        parentGraphs[network.nodes[i].id],
-        network.nodes[j].id,
-      )
+  for (let i = 0; i < nodes.length - 1; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      paths[`${nodes[i].id},${nodes[j].id}`] = pathfind(parentGraphs[nodes[i].id], nodes[j].id)
     }
   }
-  return paths satisfies PathMap
+  return paths
 }

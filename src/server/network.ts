@@ -1,55 +1,14 @@
-import z from 'zod'
-
-export const MAX_EDGES_PER_NODE = 3
-
-/**
- * TODO: Stop using node.id. Honestly remove it cause it doesn't need to exist
- * names are already unique and ids arent visible anywhere
- */
-export const networkSchema = z
-  .object({
-    nodes: z.array(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-      }),
-    ),
-    edges: z.array(
-      z.object({
-        nodes: z.tuple([z.string(), z.string()]),
-        weight: z.number().min(1),
-        id: z.string(),
-      }),
-    ),
-  })
-  .superRefine((data, ctx) => {
-    if (
-      !data.nodes.every(
-        (node) =>
-          data.edges.filter(({ nodes: [a, b] }) => node.id === a || node.id === b).length <=
-          MAX_EDGES_PER_NODE,
-      )
-    ) {
-      ctx.addIssue({
-        code: 'custom',
-        message: `Nodes have a maximum of ${MAX_EDGES_PER_NODE} edges`,
-      })
-    }
-    if (new Set(data.nodes.map(({ name }) => name)).size !== data.nodes.length) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Node names must be unique',
-      })
-    }
-    if (data.edges.some((edge) => edge.nodes[0] === edge.nodes[1])) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'A node cannot connect to itself',
-      })
-    }
-    // add edge uniqueness
-  })
-
-export type Network = z.infer<typeof networkSchema>
-export type Edge = Network['edges'][number]
-export type Node = Network['nodes'][number]
+export type Node = {
+  id: number
+  name: string
+}
+export type Edge = {
+  id: number
+  weight: number
+  node1: Node['id']
+  node2: Node['id']
+}
+export type PopulatedEdge = Edge & {
+  node1Name: Node['name']
+  node2Name: Node['name']
+}

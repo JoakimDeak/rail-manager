@@ -1,4 +1,3 @@
-import { Network } from 'server/network'
 import { Node } from './Node'
 
 export const NodeList = ({ nodes }: { nodes: Network['nodes'] }) => {

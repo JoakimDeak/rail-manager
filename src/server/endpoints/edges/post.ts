@@ -1,9 +1,8 @@
 import { BunRequest } from 'bun'
-import { MAX_EDGES_PER_NODE } from 'server/network'
-import { saveNetwork } from 'server/persistance'
+import { db } from 'server'
+import { PopulatedEdge } from 'server/network'
 import { Edge } from 'server/templates/Edge'
 import z from 'zod'
-import { network } from 'server/server'
 
 const bodySchema = z
   .object({
@@ -23,13 +22,13 @@ const handler = async (req: BunRequest<'/api/edges'>) => {
     try {
       body = await req.json()
     } catch (_) {
-      return new Response('Invalid body', { status: 400 })
+      return new Response(undefined, { status: 400 })
     }
   } else if (contentType === 'application/x-www-form-urlencoded') {
     try {
       body = Object.fromEntries(await req.formData())
     } catch (_) {
-      return new Response('Invalid body', { status: 400 })
+      return new Response(undefined, { status: 400 })
     }
   } else {
     return new Response(`Unsupported content type ${contentType}`, {
@@ -42,48 +41,45 @@ const handler = async (req: BunRequest<'/api/edges'>) => {
     return Response.json(z.treeifyError(error), { status: 400 })
   }
 
-  const unknownNode = [data.from, data.to].find((node) =>
-    network.nodes.every(({ id }) => node !== id),
-  )
-  if (unknownNode) {
-    return new Response(`Unknown node ${unknownNode}`, { status: 400 })
+  let id: number
+  try {
+    const res = db.run<[string, string, number]>(
+      `
+        INSERT INTO edges (node1,node2,weight)
+        VALUES(?1,?2,?3)
+      `,
+      data.from > data.to ? [data.to, data.from, data.weight] : [data.from, data.to, data.weight],
+    )
+    id = Number(res.lastInsertRowid)
+  } catch (e) {
+    return new Response(undefined, { status: 500 })
   }
-
-  const fullNode = [data.from, data.to].find(
-    (node) =>
-      network.edges.filter((edge) => edge.nodes.includes(node)).length === MAX_EDGES_PER_NODE,
-  )
-  if (fullNode) {
-    return new Response(`Node ${fullNode} is already at capacity`)
-  }
-
-  const isDuplicateEdge = network.edges.some(
-    (edge) => edge.nodes.includes(data.from) && edge.nodes.includes(data.to),
-  )
-  if (isDuplicateEdge) {
-    return new Response(`An edge between ${data.from} and ${data.to} already exists`, {
-      status: 400,
-    })
-  }
-
-  const newEdge = {
-    nodes: [data.from, data.to].sort() as [string, string],
-    weight: data.weight,
-    id: crypto.randomUUID(),
-  }
-  network.edges.push(newEdge)
-  saveNetwork()
 
   if (req.headers.get('Accept') === 'application/json') {
-    return new Response('Created', { status: 201 })
+    return new Response(undefined, { status: 201 })
   }
 
-  const edgeWithNodeNames = {
-    ...newEdge,
-    nodes: newEdge.nodes.map((node) => network.nodes.find(({ id }) => node === id)!),
+  // TODO: Move this type of query somewhere we can reuse it easily
+  const edge = db
+    .query<PopulatedEdge, [number]>(
+      `
+          SELECT 
+            edges.*,
+            node1.name as node1Name,
+            node2.name as node2Name
+          FROM edges
+          LEFT JOIN nodes node1 ON edges.node1 = node1.id
+          LEFT JOIN nodes node2 ON edges.node2 = node2.id
+          WHERE edges.id = ?1
+        `,
+    )
+    .get(id)
+
+  if (!edge) {
+    return new Response(undefined, { status: 500 })
   }
 
-  const html = Edge({ edge: edgeWithNodeNames }).toString()
+  const html = Edge({ edge }).toString()
   return new Response(html, {
     headers: {
       'Content-Type': 'text/html',

@@ -1,10 +1,11 @@
 import { BunRequest } from 'bun'
-import { Network } from 'server/network'
+import { Node } from 'server/network'
+import { db } from 'server'
 import { NodeOptions } from 'server/templates/NodeOptions'
-import { network } from 'server/server'
 
-const handler = (req: BunRequest<'/api/nodes/options'>) => {
-  const html = NodeOptions({ nodes: network.nodes }).toString()
+const handler = (_: BunRequest<'/api/nodes/options'>) => {
+  const nodes = db.query<Node, never[]>(`SELECT * FROM nodes`).all()
+  const html = NodeOptions({ nodes }).toString()
   return new Response(html, {
     headers: {
       'Content-Type': 'text/html',

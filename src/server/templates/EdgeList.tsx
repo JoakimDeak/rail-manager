@@ -1,12 +1,7 @@
-import { Network } from 'server/network'
 import { Edge } from './Edge'
-import { network } from 'server/server'
+import { PopulatedEdge } from 'server/network'
 
-export const EdgeList = ({ oobSwap }: { oobSwap?: string }) => {
-  const edgesWithNodeNames = network.edges.map((edge) => {
-    const [a, b] = network.nodes.filter((node) => edge.nodes.includes(node.id))
-    return { ...edge, nodes: [a, b] }
-  })
+export const EdgeList = ({ oobSwap, edges }: { edges: PopulatedEdge[]; oobSwap?: string }) => {
   // TODO: Only do min h if theres at least one edge
   return (
     <ul
@@ -14,7 +9,7 @@ export const EdgeList = ({ oobSwap }: { oobSwap?: string }) => {
       hx-swap-oob={oobSwap}
       id="edge-list"
     >
-      {edgesWithNodeNames.map((edge) => (
+      {edges.map((edge) => (
         <Edge edge={edge} />
       ))}
     </ul>

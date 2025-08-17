@@ -1,8 +1,8 @@
 {
   "name": "rail-manager",
   "scripts": {
-    "start": "bun src/server/server.ts",
-    "dev": "bun --watch src/server/server.ts",
+    "start": "bun src/server/index.ts",
+    "dev": "bun --watch src/server/index.ts",
     "format:prettier": "prettier --write src/server"
   },
   "devDependencies": {

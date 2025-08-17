@@ -1,16 +1,12 @@
-import { Edge as EdgeType, Node } from '../network'
-
-type PopulatedEdge = Omit<EdgeType, 'nodes'> & {
-  nodes: Node[]
-}
+import { PopulatedEdge } from '../network'
 
 export const Edge = ({ edge }: { edge: PopulatedEdge }) => {
   return (
-    <li class="flex items-center gap-2">
-      <span>-</span>
+    <li class="flex items-start gap-2 has-checked:last:h-20">
+      <span class="leading-10">-</span>
       <div class="group relative flex items-center justify-between gap-4 p-2 shadow-black outline-black hover:shadow-[2px_2px_0px] hover:outline has-checked:shadow-[2px_2px_0px] has-checked:outline">
         <span class="w-[30ch] truncate">
-          [{edge.nodes[0].name} : {edge.nodes[1].name}] w:{edge.weight}
+          [{edge.node1Name} : {edge.node2Name}] w:{edge.weight}
         </span>
         <div class="peer flex items-center gap-2 opacity-0 group-hover:opacity-100 has-checked:opacity-100">
           <label class="flex">

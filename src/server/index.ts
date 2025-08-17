@@ -11,12 +11,31 @@ import edgesPostHandler from './endpoints/edges/post'
 import edgeDeleteHandler from './endpoints/edges/edge/delete'
 import edgePatchHandler from './endpoints/edges/edge/patch'
 import journeysPostHandler from './endpoints/journeys/post'
-import { getNetwork, getPathMap } from './persistance'
 import index from './templates/index.html'
 import handlers from './web-sockets'
+import Database from 'bun:sqlite'
 
-export const network = getNetwork()
-export const pathMap = getPathMap()
+const db = new Database('src/server/db.sqlite', { create: true })
+db.run(`PRAGMA foreign_keys = ON;`)
+db.run(`
+  CREATE TABLE IF NOT EXISTS nodes (
+    id   INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL
+  );
+`)
+db.run(`
+  CREATE TABLE IF NOT EXISTS edges (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    weight  REAL NOT NULL,
+    node1   INTEGER NOT NULL,
+    node2   INTEGER NOT NULL,
+    FOREIGN KEY (node1) REFERENCES Nodes(id) ON DELETE CASCADE,
+    FOREIGN KEY (node2) REFERENCES Nodes(id) ON DELETE CASCADE,
+    CHECK (node1 < node2),
+    UNIQUE (node1, node2)
+  );
+`)
+export { db }
 
 const server = Bun.serve({
   routes: {
@@ -76,19 +95,19 @@ const server = Bun.serve({
   fetch(req, server) {
     const upgradeHeader = req.headers.get('upgrade')
     if (!upgradeHeader || upgradeHeader !== 'websocket') {
-      return new Response('Invalid endpoint', { status: 404 })
+      return new Response(undefined, { status: 404 })
     }
 
     const nodeId = new URL(req.url).searchParams.get('nodeId')
     if (!nodeId) {
-      return new Response('Missing node id', { status: 400 })
+      return new Response(undefined, { status: 400 })
     }
 
     const wasUpgradeSuccessful = server.upgrade(req, {
       data: { nodeId },
     })
     if (!wasUpgradeSuccessful) {
-      return new Response('Upgrade failed', { status: 500 })
+      return new Response(undefined, { status: 500 })
     }
   },
   websocket: {

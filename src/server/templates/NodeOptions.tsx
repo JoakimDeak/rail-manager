@@ -1,5 +1,4 @@
 import { Fragment } from '@kitajs/html/jsx-runtime'
-import { Network } from 'server/network'
 
 export const NodeOptions = ({ nodes, oobSwap }: { nodes: Network['nodes']; oobSwap?: string }) => {
   return (

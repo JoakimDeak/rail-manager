@@ -1,14 +1,19 @@
 import { BunRequest } from 'bun'
-import { network } from 'server/server'
+import { db } from 'server'
+import { Edge } from 'server/network'
 
 const handler = (req: BunRequest<'/api/nodes/:node/edges'>) => {
   const nodeId = req.params.node
 
-  if (!network.nodes.some((node) => node.id === nodeId)) {
-    return new Response('Not found', { status: 404 })
-  }
-
-  const edges = network.edges.filter((edge) => edge.nodes.includes(nodeId))
+  const edges = db
+    .query<Edge, [string]>(
+      `
+      SELECT *
+      FROM edges
+      WHERE edges.node1 = ?1 OR edges.node2 = ?1
+    `,
+    )
+    .all(nodeId)
 
   return Response.json({ edges })
 }
