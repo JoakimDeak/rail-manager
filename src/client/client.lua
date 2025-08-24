@@ -1,9 +1,24 @@
 local apiBase = "http://localhost:3000/api"
 
-local statusRes = http.get(apiBase .. "/status")
-if not statusRes then
-    error("Could not connect to server")
+local programName = shell.getRunningProgram()
+if programName ~= "rom/programs/http/pastebin.lua" then
+    if not fs.exists("./startup") then
+        local startup = fs.open("./startup", "w")
+        startup.write('shell.run("' .. programName .. '")')
+        startup.close()
+    end
 end
+
+while true do
+    local statusRes = http.get(apiBase .. "/status")
+    if statusRes then
+        break
+    else
+        print("Could not connect to server, sleeping")
+        sleep(30)
+    end
+end
+
 local configuredNode = nil
 if not fs.exists("./node.json") then
     local nodesRes = textutils.unserialiseJSON(http.get(apiBase .. "/nodes", {
@@ -59,7 +74,9 @@ function Station()
             ["Accept"] = "application/json"
         }).readAll())
         for _, node in pairs(nodesRes.nodes) do
-            print(node.name)
+            if node.edgeCount == 1 then
+                print(node.name)
+            end
         end
         print("----")
         local destination = read()
@@ -102,7 +119,7 @@ function Junction()
         local routeConfig = fs.open("./route-config.json", "w")
         for _, a in pairs(connectedNodes) do
             for __, b in pairs(connectedNodes) do
-                if not (a == b) then
+                if a ~= b then
                     local aName = nil
                     local bName = nil
 
@@ -129,37 +146,39 @@ function Junction()
     local config = textutils.unserialiseJSON(routeConfigFile.readAll())
 
     local ws = http.websocket("ws://localhost:3000?nodeId=" .. configuredNode.id)
-    if ws then
-        print("Connection opened")
+    if not ws then
+        error("Could not connect")
+    end
 
-        if fs.exists("./state.txt") then
-            local savedStateFile = fs.open("./state.txt", "r")
-            local savedState = savedStateFile.readAll()
-            savedStateFile.close()
-            if savedState == "0" then
+    print("Connection opened")
+
+    if fs.exists("./state.txt") then
+        local savedStateFile = fs.open("./state.txt", "r")
+        local savedState = savedStateFile.readAll()
+        savedStateFile.close()
+        if savedState == "0" then
+            redstone.setOutput("back", false)
+        elseif savedState == "1" then
+            redstone.setOutput("back", true)
+        else
+            print("Invalid saved state, disregarding")
+        end
+    end
+
+    while true do
+        local message = ws.receive()
+        if message then
+            local state = config[message]
+            if (state == "0") then
                 redstone.setOutput("back", false)
-            elseif savedState == "1" then
+            elseif state == "1" then
                 redstone.setOutput("back", true)
             else
-                print("Invalid saved state, disregarding")
+                error("Invalid state")
             end
-        end
-
-        while true do
-            local message = ws.receive()
-            if message then
-                local state = config[message]
-                if (state == "0") then
-                    redstone.setOutput("back", false)
-                elseif state == "1" then
-                    redstone.setOutput("back", true)
-                else
-                    error("Invalid state")
-                end
-                local saveStateFile = fs.open("./state.txt", "w")
-                saveStateFile.write(state)
-                saveStateFile.close()
-            end
+            local saveStateFile = fs.open("./state.txt", "w")
+            saveStateFile.write(state)
+            saveStateFile.close()
         end
     end
 
@@ -168,7 +187,14 @@ end
 if numOfEdges == 0 then
     print("Node has no edges")
 elseif numOfEdges == 1 then
-    Station()
+    while true do
+        local ok, err = pcall(Station)
+        if not ok then
+            print("Got error: " .. err)
+            print("Restarting")
+            sleep(30)
+        end
+    end
 else
     while true do
         local ok = pcall(Junction)
