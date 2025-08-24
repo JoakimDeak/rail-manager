@@ -237,6 +237,3 @@ export const deleteNode = ({ id }: { id: number }) => {
   invalidateCache()
   return res
 }
-
-const nodes = getNodes()
-const edges = getEdges()

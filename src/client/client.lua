@@ -49,12 +49,7 @@ local edgesRes = textutils.unserialiseJSON(http.get(apiBase .. "/nodes/" .. conf
 }).readAll())
 local numOfEdges = table.getn(edgesRes.edges)
 
-if numOfEdges == 0 then
-    print("Node has no edges")
-    return
-end
-
-if numOfEdges == 1 then
+function Station()
     print("Running as station")
     while (true) do
         term.clear()
@@ -81,87 +76,105 @@ if numOfEdges == 1 then
             end
         end
     end
-    return
 end
 
-print("Running as junction")
+function Junction()
+    print("Running as junction")
 
-local connectedNodes = {}
-for i, edge in pairs(edgesRes.edges) do
-    local connectedNode = nil
-    if edge.node1 == configuredNode.id then
-        connectedNode = edge.node2
-    else
-        connectedNode = edge.node1
+    local connectedNodes = {}
+    for i, edge in pairs(edgesRes.edges) do
+        local connectedNode = nil
+        if edge.node1 == configuredNode.id then
+            connectedNode = edge.node2
+        else
+            connectedNode = edge.node1
+        end
+        connectedNodes[i] = connectedNode
     end
-    connectedNodes[i] = connectedNode
-end
 
-if not fs.exists("./route-config.json") then
+    if not fs.exists("./route-config.json") then
 
-    local nodesRes = textutils.unserialiseJSON(http.get(apiBase .. "/nodes", {
-        ["Accept"] = "application/json"
-    }).readAll())
+        local nodesRes = textutils.unserialiseJSON(http.get(apiBase .. "/nodes", {
+            ["Accept"] = "application/json"
+        }).readAll())
 
-    local config = {}
-    local routeConfig = fs.open("./route-config.json", "w")
-    for _, a in pairs(connectedNodes) do
-        for __, b in pairs(connectedNodes) do
-            if not (a == b) then
-                local aName = nil
-                local bName = nil
+        local config = {}
+        local routeConfig = fs.open("./route-config.json", "w")
+        for _, a in pairs(connectedNodes) do
+            for __, b in pairs(connectedNodes) do
+                if not (a == b) then
+                    local aName = nil
+                    local bName = nil
 
-                for _, node in pairs(nodesRes.nodes) do
-                    if node.id == a then
-                        aName = node.name
+                    for _, node in pairs(nodesRes.nodes) do
+                        if node.id == a then
+                            aName = node.name
+                        end
+                        if node.id == b then
+                            bName = node.name
+                        end
                     end
-                    if node.id == b then
-                        bName = node.name
-                    end
+
+                    print("Enter state (0|1) for " .. aName .. "->" .. bName)
+                    local state = read()
+                    config[a .. "," .. b] = state
                 end
+            end
+        end
+        routeConfig.write(textutils.serialiseJSON(config))
+        routeConfig.close()
+    end
 
-                print("Enter state (0|1) for " .. aName .. "->" .. bName)
-                local state = read()
-                config[a .. "," .. b] = state
+    local routeConfigFile = fs.open("./route-config.json", "r")
+    local config = textutils.unserialiseJSON(routeConfigFile.readAll())
+
+    local ws = http.websocket("ws://localhost:3000?nodeId=" .. configuredNode.id)
+    if ws then
+        print("Connection opened")
+
+        if fs.exists("./state.txt") then
+            local savedStateFile = fs.open("./state.txt", "r")
+            local savedState = savedStateFile.readAll()
+            savedStateFile.close()
+            if savedState == "0" then
+                redstone.setOutput("back", false)
+            elseif savedState == "1" then
+                redstone.setOutput("back", true)
+            else
+                print("Invalid saved state, disregarding")
+            end
+        end
+
+        while true do
+            local message = ws.receive()
+            if message then
+                local state = config[message]
+                if (state == "0") then
+                    redstone.setOutput("back", false)
+                elseif state == "1" then
+                    redstone.setOutput("back", true)
+                else
+                    error("Invalid state")
+                end
+                local saveStateFile = fs.open("./state.txt", "w")
+                saveStateFile.write(state)
+                saveStateFile.close()
             end
         end
     end
-    routeConfig.write(textutils.serialiseJSON(config))
-    routeConfig.close()
+
 end
 
-local routeConfigFile = fs.open("./route-config.json", "r")
-local config = textutils.unserialiseJSON(routeConfigFile.readAll())
-
-local ws = http.websocket("ws://localhost:3000?nodeId=" .. configuredNode.id)
-if ws then
-    print("Connection opened")
-
-    if fs.exists("./state.txt") then
-        local savedStateFile = fs.open("./state.txt", "r")
-        local savedState = savedStateFile.readAll()
-        savedStateFile.close()
-        if savedState == "0" then
-            redstone.setOutput("back", false)
-        elseif savedState == "1" then
-            redstone.setOutput("back", true)
-        else
-            print("Invalid saved state, disregarding")
-        end
-    end
-
+if numOfEdges == 0 then
+    print("Node has no edges")
+elseif numOfEdges == 1 then
+    Station()
+else
     while true do
-        local message = ws.receive()
-        local state = config[message]
-        if (state == "0") then
-            redstone.setOutput("back", false)
-        elseif state == "1" then
-            redstone.setOutput("back", true)
-        else
-            error("Invalid state")
+        local ok = pcall(Junction)
+        if not ok then
+            print("Waiting to reconnect")
+            sleep(30)
         end
-        local saveStateFile = fs.open("./state.txt", "w")
-        saveStateFile.write(state)
-        saveStateFile.close()
     end
 end
